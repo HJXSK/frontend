@@ -13,6 +13,7 @@ function App(): React.JSX.Element {
   return (
     <NavigationContainer>
       <AuthNavigator />
+      {/* <Text>Hello</Text> */}
     </NavigationContainer>
   );
 }
