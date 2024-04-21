@@ -9,6 +9,9 @@ AppRegistry.registerComponent(appName, () => App);
  */
 
 import {registerRootComponent} from 'expo';
-import App from './src/App';
+import App from './src/app/index';
+// import LoginScreen from './src/app/auth/login';
 
 registerRootComponent(App);
+
+//! This is file is useless after package.json is configured with main specified: https://docs.expo.dev/router/installation/#setup-entry-point

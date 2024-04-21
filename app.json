@@ -1,12 +1,16 @@
 {
   "expo": {
     "name": "frontend",
+    "scheme": "hjxsk",
     "slug": "frontend",
     "android": {
       "package": "com.hjxsk.android"
     },
     "ios": {
       "bundleIdentifier": "com.hjxsk.ios"
-    }
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }
