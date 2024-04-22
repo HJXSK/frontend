@@ -5,19 +5,13 @@
  * @format
  */
 
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {ThemeProvider} from '../themes';
 import {AuthProvider} from '../contexts/authContext';
 
-import {Redirect, Slot, Stack} from 'expo-router';
-
-import LoginScreen from './auth/login';
-import RegisterScreen from './auth/register';
-import {Button} from 'react-native';
+import {Slot} from 'expo-router';
 
 function RootLayout(): React.JSX.Element {
-  const [auth, setAuth] = useState<Boolean>(false);
-
   return (
     <ThemeProvider>
       <AuthProvider>
