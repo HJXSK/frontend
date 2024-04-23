@@ -5,7 +5,7 @@ type Theme = {
     background: string;
     foreground: string;
     primary: string;
-    // secondary: string;
+    secondary: string;
   };
 };
 
@@ -14,6 +14,7 @@ const LightTheme: Theme = {
     background: '#F5F5F5',
     foreground: 'white',
     primary: '#147efb',
+    secondary: 'lightgray',
     // success: palette.green,
     // danger: palette.red,
     // failure: palette.red,
@@ -40,7 +41,7 @@ export const useTheme = () => {
 };
 
 export function ThemeProvider({children}: {children: ReactNode}) {
-  const [darkMode, _] = useState<Boolean>(false); // Default theme is 'light'
+  const [darkMode, _] = useState<boolean>(false); // Default theme is 'light'
   return (
     <ThemeContext.Provider value={darkMode ? DarkTheme : LightTheme}>
       {children}

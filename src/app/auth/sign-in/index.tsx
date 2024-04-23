@@ -1,3 +1,6 @@
+import {Stack, router} from 'expo-router';
+import {signInWithEmailAndPassword} from 'firebase/auth';
+import {useState} from 'react';
 import {
   Text,
   View,
@@ -8,13 +11,16 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import {useForm, Controller} from 'react-hook-form';
-import {signInWithEmailAndPassword} from 'firebase/auth';
+import {
+  GoogleSignin,
+  GoogleSigninButton,
+  statusCodes,
+} from '@react-native-google-signin/google-signin';
 
+import Divider from './divider';
 import {useTheme} from '../../../themes';
-import {FIREBASE_AUTH} from '../../../firebase/firebaseConfig';
 import {useAuth} from '../../../contexts/authContext';
-import {Stack, router} from 'expo-router';
-import {useState} from 'react';
+import {FIREBASE_AUTH} from '../../../firebase/firebaseConfig';
 
 type FormData = {
   email: string;
@@ -23,7 +29,7 @@ type FormData = {
 
 function SignInScreen(): React.JSX.Element {
   // state that indicates if the user is logging in.
-  const [loading, setLoading] = useState<Boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const {
     control,
     handleSubmit,
@@ -39,14 +45,17 @@ function SignInScreen(): React.JSX.Element {
   const theme = useTheme();
   const [_, setAuth] = useAuth();
 
-  const onSubmit = async (data: FormData) => {
+  /**
+   * Sign in with email / password
+   * @param data
+   */
+  const emailSignIn = async (data: FormData) => {
     setLoading(true);
     await signInWithEmailAndPassword(FIREBASE_AUTH, data.email, data.password)
       .then(userCredential => {
         // Signed in
         const user = userCredential.user;
         setAuth(user);
-        // router.replace('/(app)/home');
       })
       .catch(error => {
         // const errorCode = error.code;
@@ -56,7 +65,35 @@ function SignInScreen(): React.JSX.Element {
     setLoading(false);
   };
 
-  const resetPassword = async () => {};
+  /**
+   * Sign in with Google Account
+   */
+  const googleSignIn = async () => {
+    await GoogleSignin.hasPlayServices();
+    await GoogleSignin.signIn()
+      .then(user => {
+        setAuth(user);
+      })
+      .catch(error => {
+        switch (error.code) {
+          case statusCodes.SIGN_IN_CANCELLED:
+            // user cancelled the login flow
+            break;
+          case statusCodes.IN_PROGRESS:
+            // operation (eg. sign in) already in progress
+            break;
+          case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+            // play services not available or outdated
+            break;
+          default:
+          // some other error happened
+        }
+      });
+  };
+
+  const resetPassword = async () => {
+    // TODO:
+  };
 
   return (
     <View
@@ -88,7 +125,6 @@ function SignInScreen(): React.JSX.Element {
         )}
         name="email"
       />
-
       <Controller
         control={control}
         rules={{
@@ -110,10 +146,9 @@ function SignInScreen(): React.JSX.Element {
         )}
         name="password"
       />
-
       {/* Login Button */}
       <TouchableOpacity
-        onPress={handleSubmit(onSubmit)}
+        onPress={handleSubmit(emailSignIn)}
         disabled={!isValid}
         style={[
           styles.loginButton,
@@ -127,11 +162,10 @@ function SignInScreen(): React.JSX.Element {
           {loading ? (
             <ActivityIndicator size="small" color={theme.colors.foreground} />
           ) : (
-            <Text style={{textAlign: 'center', color: 'white'}}>Login</Text>
+            <Text style={{textAlign: 'center', color: 'white'}}>Sign in</Text>
           )}
         </View>
       </TouchableOpacity>
-
       <View style={styles.miscContainer}>
         <TouchableOpacity onPress={resetPassword}>
           <Text style={[styles.miscButton, {color: theme.colors.primary}]}>
@@ -148,6 +182,17 @@ function SignInScreen(): React.JSX.Element {
           </Text>
         </TouchableOpacity>
       </View>
+
+      <Divider style={{width: '60%'}}>
+        <Text style={{color: theme.colors.secondary}}>or</Text>
+      </Divider>
+
+      <GoogleSigninButton
+        size={GoogleSigninButton.Size.Wide}
+        color={GoogleSigninButton.Color.Dark}
+        onPress={googleSignIn}
+        disabled={loading}
+      />
     </View>
   );
 }

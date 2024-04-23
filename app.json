@@ -4,13 +4,16 @@
     "scheme": "hjxsk",
     "slug": "frontend",
     "android": {
-      "package": "com.hjxsk.android"
+      "package": "com.hjxsk.android",
+      "googleServicesFile": "./src/firebase/google-sign-in/google-services.json"
     },
     "ios": {
-      "bundleIdentifier": "com.hjxsk.ios"
+      "bundleIdentifier": "com.hjxsk.ios",
+      "googleServicesFile": "./src/firebase/google-sign-in/GoogleService-Info.plist"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "@react-native-google-signin/google-signin"
     ]
   }
 }
