@@ -95,11 +95,37 @@ function SignInScreen(): React.JSX.Element {
     // TODO:
   };
 
+  // const signInAsGuest = async () => {
+  //   setLoading(true);
+
+  //   try {
+  //     // Perform the guest sign-in logic here
+  //     // For example, you can create a guest account with a unique identifier and sign in using that account
+  //     const guestEmail = 'hjxskhku@gmail.com'; // Generate a unique guest email
+  //     const guestPassword = 'Hjxskhku5!Capstone'; // Set a temporary password for the guest account
+
+  //     // Sign in with the generated guest credentials
+  //     await signInWithEmailAndPassword(
+  //       FIREBASE_AUTH,
+  //       guestEmail,
+  //       guestPassword,
+  //     );
+  //     setLoading(false);
+
+  //     // Handle the successful sign-in as a guest
+  //     // You can navigate to the "Guest Home View" page or perform any other actions here
+  //     router.push('Guest Home View'); // Replace 'Guest Home View' with the actual route name for the guest home page
+  //   } catch (error) {
+  //     setLoading(false);
+  //     Alert.alert('Error', 'Failed to sign in as a guest');
+  //   }
+  // };
+
   return (
     <View
       style={[styles.container, {backgroundColor: theme.colors.background}]}>
       <Stack.Screen options={{headerShown: false, title: 'Login'}} />
-      <Text style={{margin: 100}}>LOGO</Text>
+      <Text style={{margin: 100}}>Testing</Text>
       {/* Email */}
       <Controller
         control={control}
@@ -166,6 +192,30 @@ function SignInScreen(): React.JSX.Element {
           )}
         </View>
       </TouchableOpacity>
+
+      {/* Sign in as Guest */}
+      {/* <TouchableOpacity
+        onPress={handleSubmit(signInAsGuest)}
+        disabled={!isValid}
+        style={[
+          styles.loginButton,
+          {
+            backgroundColor: theme.colors.primary,
+            opacity: isValid ? 1 : 0.4,
+          },
+        ]}
+        activeOpacity={0.8}>
+        <View>
+          {loading ? (
+            <ActivityIndicator size="small" color={theme.colors.foreground} />
+          ) : (
+            <Text style={{textAlign: 'center', color: 'white'}}>
+              Sign in as Guest
+            </Text>
+          )}
+        </View>
+      </TouchableOpacity> */}
+
       <View style={styles.miscContainer}>
         <TouchableOpacity onPress={resetPassword}>
           <Text style={[styles.miscButton, {color: theme.colors.primary}]}>
