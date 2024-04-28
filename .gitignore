@@ -2,6 +2,10 @@
 #
 .DS_Store
 
+# Vscode
+#
+.vscode
+
 # Xcode
 #
 build/
@@ -64,3 +68,8 @@ yarn-error.log
 
 # testing
 /coverage
+
+# Expo
+.expo
+dist/
+web-build/
