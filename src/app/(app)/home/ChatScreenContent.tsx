@@ -1,16 +1,61 @@
 import React, {useState, useRef, useEffect} from 'react';
 import {View, Text, TextInput, TouchableOpacity, FlatList} from 'react-native';
+import {FIRESTORE} from '@/firebase/firebaseConfig';
+import {collection, doc, increment, runTransaction} from 'firebase/firestore';
+import {useAuth} from '@/contexts/authContext';
+
+// Interface for the message object
+type Message = {
+  text: string;
+  sender_id: string;
+  timestamp: Date;
+  // isUser: boolean;
+};
+
+type Chat = {
+  num_raw: number;
+  is_processing: boolean;
+};
 
 function ChatScreenContent(): React.JSX.Element {
-  const [messages, setMessages] = useState([]); // State to hold the chat messages
+  const [messages, setMessages] = useState<Message[]>([]); // State to hold the chat messages
   const [inputText, setInputText] = useState(''); // State to hold the user input text
   const flatListRef = useRef(null);
+  const [auth] = useAuth();
 
   // Function to handle sending a message
-  const sendMessage = () => {
-    if (inputText.trim() !== '') {
-      setMessages([...messages, {text: inputText, isUser: true}]);
+  const sendMessage = async () => {
+    const uid = auth!.uid;
+
+    const newChat: Chat = {
+      num_raw: 1,
+      is_processing: false,
+    };
+
+    const newMessage: Message = {
+      text: inputText,
+      sender_id: uid,
+      timestamp: new Date(),
+    };
+
+    try {
+      await runTransaction(FIRESTORE, async transaction => {
+        // Get the chat document reference
+        const chatRef = doc(collection(FIRESTORE, 'chats'), uid);
+        // Get the chat document
+        const chatDoc = await transaction.get(chatRef);
+        if (!chatDoc.exists()) {
+          transaction.set(chatRef, newChat);
+        } else {
+          transaction.update(chatRef, {num_raw: increment(1)});
+        }
+        // Add the new message to the messages collection
+        const newMessageRef = doc(collection(chatRef, 'messages'));
+        transaction.set(newMessageRef, newMessage);
+      });
       setInputText('');
+    } catch (e) {
+      console.log(e);
     }
   };
 
