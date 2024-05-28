@@ -18,6 +18,10 @@ type Chat = {
   is_processing: boolean;
 };
 
+
+import {getAuth} from 'firebase/auth';
+import {collection, doc, getDoc, getDocs, where, query} from 'firebase/firestore'; 
+
 function ChatScreenContent(): React.JSX.Element {
   // Get the auth context
   const [auth] = useAuth();
@@ -57,6 +61,46 @@ function ChatScreenContent(): React.JSX.Element {
       setBuffer(0);
     }
   }, [isTyping, buffer]);
+
+
+  // Function to fetch chat history
+  useEffect(() => {
+    // Fetch the current user details
+    const fetchCurrentUser = async () => {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (user) {
+        const email = user.email;
+        const uid = user.uid;
+
+        console.log(`User email is ${email}, uid is ${uid}`);
+        fetchUserChats(uid);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
+
+  const fetchUserChats = async (uid) => {
+    try {
+      const chatRef = doc(collection(FIRESTORE, "chats"), uid);
+      const chatDoc = await getDoc(chatRef);
+        if (chatDoc.exists()) {
+          console.log("Document data:", chatDoc.data());
+          const msgRef = query(collection(FIRESTORE, "chats", uid, "messages"), where("sender_id", "==", uid));
+          const querySnapshot = await getDocs(msgRef);
+          querySnapshot.forEach((doc) => {
+            console.log(doc.id, ' => ', doc.data());
+          });
+        } else {
+          console.log("There is no chat history yet.");
+        }
+    } catch (error) {
+      console.log(error); 
+    }
+
+    console.log(chats);
+  };
+
 
   useEffect(() => {
     if (flatListRef.current) {
