@@ -1,11 +1,52 @@
 import React, {useState, useRef, useEffect} from 'react';
 import {View, Text, TextInput, TouchableOpacity, FlatList} from 'react-native';
 
+import {FIRESTORE} from '../../../firebase/firebaseConfig'
+import {getAuth} from 'firebase/auth';
+import {collection, doc, getDoc, getDocs, where, query} from 'firebase/firestore'; 
+
 function ChatScreenContent(): React.JSX.Element {
   const [messages, setMessages] = useState([]); // State to hold the chat messages
   const [inputText, setInputText] = useState(''); // State to hold the user input text
   const flatListRef = useRef(null);
 
+  // Function to fetch chat history
+  useEffect(() => {
+    // Fetch the current user details
+    const fetchCurrentUser = async () => {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (user) {
+        const email = user.email;
+        const uid = user.uid;
+
+        console.log(`User email is ${email}, uid is ${uid}`);
+        fetchUserChats(uid);
+      }
+    };
+    fetchCurrentUser();
+  }, []);
+  const fetchUserChats = async (uid) => {
+    try {
+      const chatRef = doc(collection(FIRESTORE, "chats"), uid);
+      const chatDoc = await getDoc(chatRef);
+        if (chatDoc.exists()) {
+          console.log("Document data:", chatDoc.data());
+          const msgRef = query(collection(FIRESTORE, "chats", uid, "messages"), where("sender_id", "==", uid));
+          const querySnapshot = await getDocs(msgRef);
+          querySnapshot.forEach((doc) => {
+            console.log(doc.id, ' => ', doc.data());
+          });
+        } else {
+          console.log("There is no chat history yet.");
+        }
+    } catch (error) {
+      console.log(error); 
+    }
+
+    console.log(chats);
+  };
+  
   // Function to handle sending a message
   const sendMessage = () => {
     if (inputText.trim() !== '') {
