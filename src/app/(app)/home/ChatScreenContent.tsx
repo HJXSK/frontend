@@ -1,5 +1,5 @@
 import React, {useState, useRef, useEffect} from 'react';
-import {View, Text, TextInput, TouchableOpacity, FlatList} from 'react-native';
+import {View, Text, TextInput, TouchableOpacity, FlatList, Switch} from 'react-native';
 
 import {FIRESTORE} from '../../../firebase/firebaseConfig'
 import {getAuth} from 'firebase/auth';
@@ -47,6 +47,13 @@ function ChatScreenContent(): React.JSX.Element {
     console.log(chats);
   };
   
+  // Profanity Filter Switch
+  const [switchValue, setswitchValue] = useState(false);
+  
+  const toggleSwitch = (value) => {
+    setswitchValue(value);
+  }
+
   // Function to handle sending a message
   const sendMessage = () => {
     if (inputText.trim() !== '') {
@@ -121,6 +128,16 @@ function ChatScreenContent(): React.JSX.Element {
           value={inputText}
           onChangeText={setInputText}
         />
+        <View style = {{flex: 0.3,}}>
+          <Text>
+            {switchValue ? 'Filter ON' : 'Filter OFF'}
+          </Text>
+
+          <Switch
+            onValueChange={toggleSwitch}
+            value={switchValue}
+          />
+        </View>
         <TouchableOpacity
           style={{backgroundColor: '#007AFF', borderRadius: 5, padding: 10}}
           onPress={sendMessage}>
