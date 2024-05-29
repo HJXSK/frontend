@@ -86,7 +86,7 @@ function ChatScreenContent(): React.JSX.Element {
       const chatDoc = await getDoc(chatRef);
         if (chatDoc.exists()) {
           console.log("Document data:", chatDoc.data());
-          const msgRef = query(collection(FIRESTORE, "chats", uid, "messages"), where("sender_id", "==", uid));
+          const msgRef = query(collection(FIRESTORE, "chats", uid, "messages"));
           const querySnapshot = await getDocs(msgRef);
           querySnapshot.forEach((doc) => {
             console.log(doc.id, ' => ', doc.data());
