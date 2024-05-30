@@ -2,7 +2,15 @@ import React, {useState, useRef, useEffect} from 'react';
 import {View, Text, TextInput, TouchableOpacity, FlatList} from 'react-native';
 import {FIRESTORE, FUNCTIONS} from '@/firebase/firebaseConfig';
 import {httpsCallable} from 'firebase/functions';
-import {collection, doc, increment, runTransaction} from 'firebase/firestore';
+import {
+  collection,
+  doc,
+  increment,
+  runTransaction,
+  onSnapshot,
+  orderBy,
+  query,
+} from 'firebase/firestore';
 import {useAuth} from '@/contexts/authContext';
 
 // Interface for the message object
@@ -17,10 +25,6 @@ type Chat = {
   num_raw: number;
   is_processing: boolean;
 };
-
-
-import {getAuth} from 'firebase/auth';
-import {collection, doc, getDoc, getDocs, where, query} from 'firebase/firestore'; 
 
 function ChatScreenContent(): React.JSX.Element {
   // Get the auth context
@@ -47,6 +51,32 @@ function ChatScreenContent(): React.JSX.Element {
     return () => clearTimeout(timeoutRef.current!);
   }, []);
 
+  // Set up a listener for new messages when the component mounts
+  useEffect(() => {
+    // Get the user ID from the auth context
+    const uid = auth!.uid;
+    // Define a function to unsubscribe from the messages snapshot listener
+    let unSubMessages = () => {};
+    try {
+      // Create a reference to the messages collection for the current user
+      const messagesRef = collection(FIRESTORE, 'chats', uid, 'messages');
+      // Create a query to order the messages by timestamp in ascending order
+      const messagesQuery = query(messagesRef, orderBy('timestamp', 'asc'));
+      // Subscribe to the messages snapshot and update the messages state
+      unSubMessages = onSnapshot(messagesQuery, snapshot => {
+        let temp: Message[] = [];
+        snapshot.forEach(doc => {
+          temp.push({...doc.data()} as Message);
+        });
+        setMessages(temp);
+      });
+    } catch (error) {
+      console.log(error);
+    }
+    // Return the unsubscribe function to clean up the listener when the component unmounts
+    return unSubMessages;
+  }, []);
+
   // Run this effect whenever use stops typing or a message is sent.
   useEffect(() => {
     // Check if the user is not typing and there is a buffer
@@ -61,52 +91,6 @@ function ChatScreenContent(): React.JSX.Element {
       setBuffer(0);
     }
   }, [isTyping, buffer]);
-
-
-  // Function to fetch chat history
-  useEffect(() => {
-    // Fetch the current user details
-    const fetchCurrentUser = async () => {
-      const auth = getAuth();
-      const user = auth.currentUser;
-      if (user) {
-        const email = user.email;
-        const uid = user.uid;
-
-        console.log(`User email is ${email}, uid is ${uid}`);
-        fetchUserChats(uid);
-      }
-    };
-    fetchCurrentUser();
-  }, []);
-
-  const fetchUserChats = async (uid) => {
-    try {
-      const chatRef = doc(collection(FIRESTORE, "chats"), uid);
-      const chatDoc = await getDoc(chatRef);
-        if (chatDoc.exists()) {
-          console.log("Document data:", chatDoc.data());
-          const msgRef = query(collection(FIRESTORE, "chats", uid, "messages"));
-          const querySnapshot = await getDocs(msgRef);
-          querySnapshot.forEach((doc) => {
-            console.log(doc.id, ' => ', doc.data());
-          });
-        } else {
-          console.log("There is no chat history yet.");
-        }
-    } catch (error) {
-      console.log(error); 
-    }
-
-    console.log(chats);
-  };
-
-
-  useEffect(() => {
-    if (flatListRef.current) {
-      flatListRef.current.scrollToEnd({animated: true});
-    }
-  }, [messages]);
 
   // Function to handle sending a message
   const sendMessage = async () => {
@@ -201,7 +185,10 @@ function ChatScreenContent(): React.JSX.Element {
           data={messages}
           keyExtractor={(item, index) => index.toString()}
           renderItem={({item}) => (
-            <MessageBubble message={item.text} isUser={item.isUser} />
+            <MessageBubble
+              message={item.text}
+              isUser={item.sender_id == auth!.uid}
+            />
           )}
           contentContainerStyle={{
             flexGrow: 1,
