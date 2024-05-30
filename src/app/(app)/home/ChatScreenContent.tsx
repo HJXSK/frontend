@@ -1,6 +1,7 @@
 import React, {useState, useRef, useEffect} from 'react';
 import {View, Text, TextInput, TouchableOpacity, FlatList} from 'react-native';
-import {FIRESTORE} from '@/firebase/firebaseConfig';
+import {FIRESTORE, FUNCTIONS} from '@/firebase/firebaseConfig';
+import {httpsCallable} from 'firebase/functions';
 import {collection, doc, increment, runTransaction} from 'firebase/firestore';
 import {useAuth} from '@/contexts/authContext';
 
@@ -18,10 +19,50 @@ type Chat = {
 };
 
 function ChatScreenContent(): React.JSX.Element {
-  const [messages, setMessages] = useState<Message[]>([]); // State to hold the chat messages
-  const [inputText, setInputText] = useState(''); // State to hold the user input text
-  const flatListRef = useRef(null);
+  // Get the auth context
   const [auth] = useAuth();
+
+  //
+  const requestLLM = httpsCallable(FUNCTIONS, 'requestLLM');
+
+  // State to hold the chat messages
+  const [messages, setMessages] = useState<Message[]>([]);
+  // State to hold the user input text
+  const [inputText, setInputText] = useState('');
+
+  // State to hold the typing status
+  const [isTyping, setIsTyping] = useState(false);
+  // State to hold the number of unprocessed messages
+  const [buffer, setBuffer] = useState(0);
+
+  const flatListRef = useRef(null);
+  // A reference to the timeout for trigger LLM.
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // clears timeout when component unmounts
+  useEffect(() => {
+    return () => clearTimeout(timeoutRef.current!);
+  }, []);
+
+  // Run this effect whenever use stops typing or a message is sent.
+  useEffect(() => {
+    // Check if the user is not typing and there is a buffer
+    if (!isTyping && buffer > 0) {
+      requestLLM()
+        .then(result => {
+          console.log(result.data);
+        })
+        .catch(e => {
+          console.log(e);
+        });
+      setBuffer(0);
+    }
+  }, [isTyping, buffer]);
+
+  useEffect(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToEnd({animated: true});
+    }
+  }, [messages]);
 
   // Function to handle sending a message
   const sendMessage = async () => {
@@ -56,14 +97,33 @@ function ChatScreenContent(): React.JSX.Element {
       setInputText('');
     } catch (e) {
       console.log(e);
+      return false;
     }
+
+    console.log('Message sent');
+    // prolong the typing status assuming the user may
+    // continue typing in 5secs after sending
+    // !WARNING: order matters. startTyping must be called before setBuffer
+    startTyping(5000);
+    setBuffer(previous => previous + 1);
   };
 
-  useEffect(() => {
-    if (flatListRef.current) {
-      flatListRef.current.scrollToEnd({animated: true});
+  /**
+   * Starts the typing recording and sets the isTyping state to true.
+   * Automatically sets isTyping to false after the specified delay.
+   *
+   * @param delay - The delay in milliseconds before setting isTyping to false. Default value is 3000.
+   */
+  const startTyping = (delay: number = 3000) => {
+    setIsTyping(true);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
-  }, [messages]);
+    timeoutRef.current = setTimeout(() => {
+      console.log('isTyping set to false');
+      setIsTyping(false);
+    }, delay);
+  };
 
   // Custom message bubble component
   const MessageBubble = ({message, isUser}) => (
@@ -123,7 +183,10 @@ function ChatScreenContent(): React.JSX.Element {
           }}
           placeholder="Type your message"
           value={inputText}
-          onChangeText={setInputText}
+          onChangeText={text => {
+            setInputText(text);
+            startTyping();
+          }}
         />
         <TouchableOpacity
           style={{backgroundColor: '#007AFF', borderRadius: 5, padding: 10}}

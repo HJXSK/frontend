@@ -6,6 +6,7 @@ import {getFirestore} from 'firebase/firestore';
 import {getReactNativePersistence, initializeAuth} from 'firebase/auth';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
+import {getFunctions, connectFunctionsEmulator} from 'firebase/functions';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -30,6 +31,9 @@ export const FIREBASE_AUTH = initializeAuth(FIREBASE_APP, {
 
 // The Firestore service
 export const FIRESTORE = getFirestore(FIREBASE_APP);
+
+export const FUNCTIONS = getFunctions(FIREBASE_APP);
+connectFunctionsEmulator(FUNCTIONS, '127.0.0.1', 5001);
 
 // Google SignIn
 GoogleSignin.configure({
