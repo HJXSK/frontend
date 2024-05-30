@@ -1,6 +1,7 @@
 import React, {useState, useRef, useEffect} from 'react';
 import {View, Text, TextInput, TouchableOpacity, FlatList} from 'react-native';
-import {FIRESTORE} from '@/firebase/firebaseConfig';
+import {FIRESTORE, FUNCTIONS} from '@/firebase/firebaseConfig';
+import {httpsCallable} from 'firebase/functions';
 import {collection, doc, increment, runTransaction} from 'firebase/firestore';
 import {useAuth} from '@/contexts/authContext';
 
@@ -20,6 +21,9 @@ type Chat = {
 function ChatScreenContent(): React.JSX.Element {
   // Get the auth context
   const [auth] = useAuth();
+
+  //
+  const requestLLM = httpsCallable(FUNCTIONS, 'requestLLM');
 
   // State to hold the chat messages
   const [messages, setMessages] = useState<Message[]>([]);
@@ -43,7 +47,13 @@ function ChatScreenContent(): React.JSX.Element {
   useEffect(() => {
     // Check if the user is not typing and there is a buffer
     if (!isTyping && buffer > 0) {
-      console.log('LLM triggered');
+      requestLLM()
+        .then(result => {
+          console.log(result.data);
+        })
+        .catch(e => {
+          console.log(e);
+        });
       setBuffer(0);
     }
   }, [isTyping, buffer]);
