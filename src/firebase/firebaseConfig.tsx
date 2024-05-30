@@ -1,7 +1,7 @@
 // Import the functions you need from the SDKs you need
 import {initializeApp} from 'firebase/app';
 // TODO: Add SDKs for Firebase products that you want to use
-import {getFirestore} from 'firebase/firestore';
+import {getFirestore, connectFirestoreEmulator} from 'firebase/firestore';
 // https://firebase.google.com/docs/web/setup#available-libraries
 import {getReactNativePersistence, initializeAuth} from 'firebase/auth';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
@@ -33,7 +33,14 @@ export const FIREBASE_AUTH = initializeAuth(FIREBASE_APP, {
 export const FIRESTORE = getFirestore(FIREBASE_APP);
 
 export const FUNCTIONS = getFunctions(FIREBASE_APP);
-connectFunctionsEmulator(FUNCTIONS, '127.0.0.1', 5001);
+
+if (process.env.APP_ENV == "local") {
+  // Emulator for Firestore
+  connectFirestoreEmulator(FIRESTORE, '127.0.0.1', 8080);
+  // Emulator for Cloud Functions
+  connectFunctionsEmulator(FUNCTIONS, '127.0.0.1', 5001);
+}
+
 
 // Google SignIn
 GoogleSignin.configure({
