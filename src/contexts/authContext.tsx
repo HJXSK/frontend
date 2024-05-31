@@ -19,7 +19,7 @@ export function AuthProvider({children}: {children: ReactNode}) {
 
   useEffect(() => {
     if (auth) {
-      router.replace('/(app)/home');
+      router.replace('/home');
     } else {
       router.replace('/auth/sign-in');
     }

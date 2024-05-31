@@ -1,5 +1,5 @@
 import React, {useState, useRef, useEffect} from 'react';
-import {View, Text, TextInput, TouchableOpacity, FlatList} from 'react-native';
+import {View, Text, TextInput, TouchableOpacity, FlatList, Switch} from 'react-native';
 import {FIRESTORE, FUNCTIONS} from '@/firebase/firebaseConfig';
 import {httpsCallable} from 'firebase/functions';
 import {
