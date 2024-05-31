@@ -1,5 +1,13 @@
 import React, {useState, useRef, useEffect} from 'react';
-import {View, Text, TextInput, TouchableOpacity, FlatList, Switch} from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  Switch,
+  StyleSheet,
+} from 'react-native';
 import {FIRESTORE, FUNCTIONS} from '@/firebase/firebaseConfig';
 import {httpsCallable} from 'firebase/functions';
 import {
@@ -43,7 +51,7 @@ function ChatScreenContent(): React.JSX.Element {
   // State to hold the number of unprocessed messages
   const [buffer, setBuffer] = useState(0);
 
-  const flatListRef = useRef(null);
+  const flatListRef = useRef<FlatList>(null);
   // A reference to the timeout for trigger LLM.
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   // clears timeout when component unmounts
@@ -94,6 +102,9 @@ function ChatScreenContent(): React.JSX.Element {
 
   // Function to handle sending a message
   const sendMessage = async () => {
+    if (inputText === '') {
+      return;
+    }
     const uid = auth!.uid;
 
     const newChat: Chat = {
@@ -154,7 +165,13 @@ function ChatScreenContent(): React.JSX.Element {
   };
 
   // Custom message bubble component
-  const MessageBubble = ({message, isUser}) => (
+  const MessageBubble = ({
+    message,
+    isUser,
+  }: {
+    message: string;
+    isUser: boolean;
+  }) => (
     <View
       style={{
         flexDirection: 'row',
@@ -165,12 +182,9 @@ function ChatScreenContent(): React.JSX.Element {
       }}>
       <View
         style={{
+          ...styles.BubbleMessage,
           backgroundColor: isUser ? '#B2DFFC' : '#007AFF',
-          borderRadius: 20, // Set a higher value for a rounded container
-          paddingHorizontal: 10,
-          paddingVertical: 5,
-          borderWidth: 1, // Add border width
-          borderColor: isUser ? '#B2DFFC' : '#007AFF', // Set border color based on bubble background color
+          borderColor: isUser ? '#B2DFFC' : '#007AFF',
         }}>
         <Text style={{color: isUser ? 'black' : 'white'}}>{message}</Text>
       </View>
@@ -196,22 +210,15 @@ function ChatScreenContent(): React.JSX.Element {
             paddingBottom: 10,
           }} // Add top and bottom padding
           onContentSizeChange={() =>
-            flatListRef.current.scrollToEnd({animated: true})
+            flatListRef.current!.scrollToEnd({animated: true})
           }
-          onLayout={() => flatListRef.current.scrollToEnd({animated: true})}
+          onLayout={() => flatListRef.current!.scrollToEnd({animated: true})}
         />
       </View>
       <View
         style={{flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
         <TextInput
-          style={{
-            flex: 1,
-            borderWidth: 1,
-            borderColor: 'gray',
-            borderRadius: 5,
-            padding: 10,
-            marginRight: 10, // Add right margin to match the message bubble
-          }}
+          style={styles.inputField}
           placeholder="Type your message"
           value={inputText}
           onChangeText={text => {
@@ -228,5 +235,22 @@ function ChatScreenContent(): React.JSX.Element {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  inputField: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 5,
+    padding: 10,
+    marginRight: 10, // Add right margin to match the message bubble
+  },
+  BubbleMessage: {
+    borderRadius: 20, // Set a higher value for a rounded container
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderWidth: 1, // Add border width
+  },
+});
 
 export default ChatScreenContent;
