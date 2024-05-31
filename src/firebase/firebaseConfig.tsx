@@ -34,7 +34,7 @@ export const FIRESTORE = getFirestore(FIREBASE_APP);
 
 export const FUNCTIONS = getFunctions(FIREBASE_APP);
 
-if (process.env.APP_ENV == "local") {
+if (process.env.EXPO_PUBLIC_APP_ENV == "local") {
   // Emulator for Firestore
   connectFirestoreEmulator(FIRESTORE, '127.0.0.1', 8080);
   // Emulator for Cloud Functions
