@@ -1,9 +1,18 @@
-import {Text, View, StyleSheet, Switch, ScrollView} from 'react-native';
+import {
+  Text,
+  View,
+  StyleSheet,
+  Switch,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {toggle_ProfanityFilter} from '@/redux/features/settings/settingsSlice';
 import {RootState} from '@/redux/store';
 import {FontAwesome} from '@expo/vector-icons';
-import { UnknownAction } from '@reduxjs/toolkit';
+import {UnknownAction} from '@reduxjs/toolkit';
+import {useTheme} from '@/themes';
+import {getAuth, signOut} from 'firebase/auth';
 
 type ItemType = 'switch' | 'category';
 
@@ -42,8 +51,18 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   section: {
+    marginBottom: 20,
     borderRadius: 10,
     overflow: 'hidden',
+  },
+  signOutButtonContainer: {
+    backgroundColor: 'white',
+    padding: 7,
+    borderRadius: 10,
+  },
+  signOutButtonText: {
+    textAlign: 'center',
+    fontSize: 18,
   },
 });
 
@@ -91,7 +110,7 @@ const DataItem: React.FC<Item> = ({
   return <></>;
 };
 
-const SETTINGS: {section: string, data: Item[]}[] = [
+const SETTINGS: {section: string; data: Item[]}[] = [
   {
     section: 'Account',
     data: [
@@ -125,12 +144,38 @@ const DataSection: React.FC<Section> = ({data}: Section): JSX.Element => {
 };
 
 const Settings: React.FC = (): JSX.Element => {
+  // Get the current theme
+  const theme = useTheme();
+
+  // Get the authentication instance
+  const auth = getAuth();
+
+  // Function to handle sign out
+  const handleSignOut = () => {
+    signOut(auth)
+      .then(() => {
+        console.log('Signed out');
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  };
+
   return (
     <ScrollView>
       <View style={styles.container}>
         {SETTINGS.map((item, index) => (
           <DataSection key={index} data={item.data} />
         ))}
+
+        <TouchableOpacity
+          style={styles.signOutButtonContainer}
+          onPress={handleSignOut}>
+          <Text
+            style={[styles.signOutButtonText, {color: theme.colors.danger}]}>
+            Sign out
+          </Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
