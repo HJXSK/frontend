@@ -19,6 +19,8 @@ import {
   query,
 } from 'firebase/firestore';
 import {getAuth} from 'firebase/auth';
+import {useSelector} from 'react-redux';
+import {RootState} from '@/redux/store';
 
 // Interface for the message object
 type Message = {
@@ -39,6 +41,11 @@ function ChatScreenContent(): React.JSX.Element {
 
   //
   const requestLLM = httpsCallable(FUNCTIONS, 'requestLLM');
+
+  // The profanity filter setting
+  const gs_settings_profanity_filter = useSelector(
+    (state: RootState) => state.settings.gs_settings_profanity_filter,
+  );
 
   // State to hold the chat messages
   const [messages, setMessages] = useState<Message[]>([]);
@@ -88,7 +95,7 @@ function ChatScreenContent(): React.JSX.Element {
   useEffect(() => {
     // Check if the user is not typing and there is a buffer
     if (!isTyping && buffer > 0) {
-      requestLLM()
+      requestLLM({profanity_filter: gs_settings_profanity_filter})
         .then(result => {
           console.log(result.data);
         })
