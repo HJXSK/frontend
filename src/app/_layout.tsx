@@ -7,17 +7,26 @@
 
 import React from 'react';
 import {ThemeProvider} from '../themes';
-import {AuthProvider} from '../contexts/authContext';
 import {Provider} from 'react-redux';
 import {store} from '@/redux/store';
 import {Slot} from 'expo-router';
+import { FIREBASE_AUTH } from '@/firebase/firebaseConfig';
+import { router } from 'expo-router';
+
 function RootLayout(): React.JSX.Element {
+
+  FIREBASE_AUTH.onAuthStateChanged(user => {
+    if (user) {
+      router.replace('/home');
+    } else {
+      router.replace('/auth/sign-in');
+    }
+  });
+
   return (
     <Provider store={store}>
       <ThemeProvider>
-        <AuthProvider>
           <Slot />
-        </AuthProvider>
       </ThemeProvider>
     </Provider>
   );

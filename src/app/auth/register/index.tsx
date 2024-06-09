@@ -13,7 +13,6 @@ import {
 import {useForm, Controller} from 'react-hook-form';
 
 import {useTheme} from '../../../themes';
-import {useAuth} from '../../../contexts/authContext';
 import {FIREBASE_AUTH} from '../../../firebase/firebaseConfig';
 
 type FormData = {
@@ -41,7 +40,6 @@ function SignUpScreen(): React.JSX.Element {
   const pwd = watch('password');
 
   const theme = useTheme();
-  const [_, setAuth] = useAuth();
   const auth = getAuth();
 
   const onSignUpPressed = async (data: FormData) => {

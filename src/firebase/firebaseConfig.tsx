@@ -3,7 +3,7 @@ import {initializeApp} from 'firebase/app';
 // TODO: Add SDKs for Firebase products that you want to use
 import {getFirestore, connectFirestoreEmulator} from 'firebase/firestore';
 // https://firebase.google.com/docs/web/setup#available-libraries
-import {getReactNativePersistence, initializeAuth} from 'firebase/auth';
+import {getReactNativePersistence, initializeAuth, connectAuthEmulator} from 'firebase/auth';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {getFunctions, connectFunctionsEmulator} from 'firebase/functions';
@@ -39,6 +39,8 @@ if (process.env.EXPO_PUBLIC_APP_ENV == "local") {
   connectFirestoreEmulator(FIRESTORE, '127.0.0.1', 8080);
   // Emulator for Cloud Functions
   connectFunctionsEmulator(FUNCTIONS, '127.0.0.1', 5001);
+  // Emulator for Authentication
+  connectAuthEmulator(FIREBASE_AUTH, "http://127.0.0.1:9099");
 }
 
 
