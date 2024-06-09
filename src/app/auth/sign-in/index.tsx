@@ -19,7 +19,6 @@ import {
 
 import Divider from './divider';
 import {useTheme} from '../../../themes';
-import {useAuth} from '../../../contexts/authContext';
 import {FIREBASE_AUTH} from '../../../firebase/firebaseConfig';
 
 type FormData = {
@@ -43,7 +42,6 @@ function SignInScreen(): React.JSX.Element {
 
   // Global Contexts
   const theme = useTheme();
-  const [_, setAuth] = useAuth();
 
   /**
    * Sign in with email / password
@@ -55,7 +53,7 @@ function SignInScreen(): React.JSX.Element {
       .then(userCredential => {
         // Signed in
         const user = userCredential.user;
-        setAuth(user);
+        console.log('user logged in');
       })
       .catch(error => {
         // const errorCode = error.code;
@@ -72,7 +70,7 @@ function SignInScreen(): React.JSX.Element {
     await GoogleSignin.hasPlayServices();
     await GoogleSignin.signIn()
       .then(user => {
-        setAuth(user);
+        console.log('User googled signed in');
       })
       .catch(error => {
         switch (error.code) {

@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   FlatList,
-  Switch,
   StyleSheet,
 } from 'react-native';
 import {FIRESTORE, FUNCTIONS} from '@/firebase/firebaseConfig';
@@ -19,7 +18,7 @@ import {
   orderBy,
   query,
 } from 'firebase/firestore';
-import {useAuth} from '@/contexts/authContext';
+import {getAuth} from 'firebase/auth';
 
 // Interface for the message object
 type Message = {
@@ -36,7 +35,7 @@ type Chat = {
 
 function ChatScreenContent(): React.JSX.Element {
   // Get the auth context
-  const [auth] = useAuth();
+  const auth = getAuth().currentUser;
 
   //
   const requestLLM = httpsCallable(FUNCTIONS, 'requestLLM');
