@@ -21,6 +21,7 @@ import {
 import {getAuth} from 'firebase/auth';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/redux/store';
+import TypingBubble from '@/components/container/typingBubble';
 
 // Interface for the message object
 type Message = {
@@ -57,6 +58,8 @@ function ChatScreenContent(): React.JSX.Element {
   // State to hold the number of unprocessed messages
   const [buffer, setBuffer] = useState(0);
 
+  const [isProcessing, setIsProcessing] = useState(false);
+
   const flatListRef = useRef<FlatList>(null);
   // A reference to the timeout for trigger LLM.
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -73,6 +76,11 @@ function ChatScreenContent(): React.JSX.Element {
     let unSubMessages = () => {};
     try {
       // Create a reference to the messages collection for the current user
+      const chatRef = doc(FIRESTORE, 'chats', uid);
+      const unSubChat = onSnapshot(chatRef, snapshot => {
+        setIsProcessing(snapshot.data()!.is_processing);
+      });
+
       const messagesRef = collection(FIRESTORE, 'chats', uid, 'messages');
       // Create a query to order the messages by timestamp in ascending order
       const messagesQuery = query(messagesRef, orderBy('timestamp', 'asc'));
@@ -199,7 +207,7 @@ function ChatScreenContent(): React.JSX.Element {
 
   return (
     <View style={{flex: 1, paddingHorizontal: 10}}>
-      <View style={{flex: 1, marginVertical: 10, backgroundColor: '#E4F2FD'}}>
+      <View style={{flex: 1}}>
         <FlatList
           ref={flatListRef}
           data={messages}
@@ -219,6 +227,7 @@ function ChatScreenContent(): React.JSX.Element {
             flatListRef.current!.scrollToEnd({animated: true})
           }
           onLayout={() => flatListRef.current!.scrollToEnd({animated: true})}
+          ListFooterComponent={isProcessing ? <TypingBubble /> : null}
         />
       </View>
       <View
@@ -255,7 +264,6 @@ const styles = StyleSheet.create({
     borderRadius: 20, // Set a higher value for a rounded container
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderWidth: 1, // Add border width
   },
 });
 
