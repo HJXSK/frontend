@@ -74,11 +74,12 @@ function ChatScreenContent(): React.JSX.Element {
     const uid = auth!.uid;
     // Define a function to unsubscribe from the messages snapshot listener
     let unSubMessages = () => {};
+    let unSubChat = () => {};
     try {
       // Create a reference to the messages collection for the current user
       const chatRef = doc(FIRESTORE, 'chats', uid);
-      const unSubChat = onSnapshot(chatRef, snapshot => {
-        setIsProcessing(snapshot.data()!.is_processing);
+      unSubChat = onSnapshot(chatRef, snapshot => {
+        setIsProcessing(snapshot.data()?.is_processing);
       });
 
       const messagesRef = collection(FIRESTORE, 'chats', uid, 'messages');
@@ -96,7 +97,10 @@ function ChatScreenContent(): React.JSX.Element {
       console.log(error);
     }
     // Return the unsubscribe function to clean up the listener when the component unmounts
-    return unSubMessages;
+    return () => {
+      unSubMessages();
+      unSubChat();
+    };
   }, []);
 
   // Run this effect whenever use stops typing or a message is sent.
@@ -157,7 +161,7 @@ function ChatScreenContent(): React.JSX.Element {
     // prolong the typing status assuming the user may
     // continue typing in 5secs after sending
     // !WARNING: order matters. startTyping must be called before setBuffer
-    startTyping(5000);
+    startTyping(2500);
     setBuffer(previous => previous + 1);
   };
 
