@@ -7,6 +7,7 @@ type Theme = {
     primary: string;
     secondary: string;
     danger: string;
+    disabled: string;
   };
 };
 
@@ -15,8 +16,9 @@ const LightTheme: Theme = {
     background: '#F5F5F5',
     foreground: 'white',
     primary: '#147efb',
-    secondary: 'lightgray',
+    secondary: '#EDEDED',
     danger: '#EE4B2B',
+    disabled: '#A0A0A0',
     // success: palette.green,
     // danger: palette.red,
     // failure: palette.red,
