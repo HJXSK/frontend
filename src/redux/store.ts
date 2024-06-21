@@ -1,11 +1,11 @@
 import {configureStore} from '@reduxjs/toolkit';
-import settingsReducer from './features/settings/settingsSlice';
-import {userProfileSlice} from './features/user/userProfileSlice';
+import settingsReducer, {settingState} from './features/settings/settingsSlice';
+import userProfileReducer from './features/user/userProfileSlice';
 
 export const store = configureStore({
   reducer: {
     settings: settingsReducer,
-    user_profile: userProfileSlice.reducer,
+    user_profile: userProfileReducer,
   },
 });
 
