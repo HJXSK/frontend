@@ -3,10 +3,15 @@ import {initializeApp} from 'firebase/app';
 // TODO: Add SDKs for Firebase products that you want to use
 import {getFirestore, connectFirestoreEmulator} from 'firebase/firestore';
 // https://firebase.google.com/docs/web/setup#available-libraries
-import {getReactNativePersistence, initializeAuth, connectAuthEmulator} from 'firebase/auth';
+import {
+  getReactNativePersistence,
+  initializeAuth,
+  connectAuthEmulator,
+} from 'firebase/auth';
 import ReactNativeAsyncStorage from '@react-native-async-storage/async-storage';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {getFunctions, connectFunctionsEmulator} from 'firebase/functions';
+import {connectStorageEmulator, getStorage} from 'firebase/storage';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -34,15 +39,18 @@ export const FIRESTORE = getFirestore(FIREBASE_APP);
 
 export const FUNCTIONS = getFunctions(FIREBASE_APP);
 
-if (process.env.EXPO_PUBLIC_APP_ENV == "local") {
+export const STORAGE = getStorage(FIREBASE_APP);
+
+if (process.env.EXPO_PUBLIC_APP_ENV == 'local') {
   // Emulator for Firestore
   connectFirestoreEmulator(FIRESTORE, '127.0.0.1', 8080);
   // Emulator for Cloud Functions
   connectFunctionsEmulator(FUNCTIONS, '127.0.0.1', 5001);
+  // Emulator for Storage
+  connectStorageEmulator(STORAGE, '127.0.0.1', 9199);
   // Emulator for Authentication
-  connectAuthEmulator(FIREBASE_AUTH, "http://127.0.0.1:9099");
+  connectAuthEmulator(FIREBASE_AUTH, 'http://127.0.0.1:9099');
 }
-
 
 // Google SignIn
 GoogleSignin.configure({

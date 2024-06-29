@@ -1,4 +1,5 @@
 import {FIRESTORE} from '@/firebase/firebaseConfig';
+import {init_settings} from '@/redux/features/settings/settingsSlice';
 import {update_profile} from '@/redux/features/user/userProfileSlice';
 import {router} from 'expo-router';
 import {getAuth} from 'firebase/auth';
@@ -15,9 +16,12 @@ const InitPage: React.FC = (): JSX.Element => {
     const userRef = doc(FIRESTORE, 'users', auth.uid);
     const userSnap = await getDoc(userRef);
     if (userSnap.exists()) {
-      dispatch(update_profile(userSnap.data()));
+      const data = userSnap.data();
+      dispatch(update_profile(data));
+      console.log('User initialized: Synced with Firestore');
+      dispatch(init_settings(data.settings));
+      console.log('User Settings initialized: Synced with Firestore');
     }
-    console.log('User initialized');
   };
   const initializeStore = async () => {
     initializeUser();
