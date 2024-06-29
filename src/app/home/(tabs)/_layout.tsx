@@ -1,6 +1,7 @@
 import {Tabs} from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
+import ChatTitle from '@/components/chat/chatTitle';
 
 export default function TabLayout() {
   return (
@@ -9,6 +10,7 @@ export default function TabLayout() {
         name="chat/index"
         options={{
           title: 'Chat',
+          headerTitle: props => <ChatTitle />,
           tabBarIcon: ({color}) => (
             <FontAwesome size={28} name="comments" color={color} />
           ),
