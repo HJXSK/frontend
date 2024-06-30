@@ -1,8 +1,7 @@
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import ChatTitle from './chat/chatTitle';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
-import ChatPage from '@/app/home/chat/index';
 import SettingStack from './settings/settingStack';
+import chatStack from './chat/chatStack';
 
 const Tab = createBottomTabNavigator();
 
@@ -10,18 +9,18 @@ export default function HomeTab() {
   return (
     <Tab.Navigator>
       <Tab.Screen
-        name="chat"
-        component={ChatPage}
+        name="chat-stack"
+        component={chatStack}
         options={{
+          headerShown: false,
           title: 'Chat',
-          headerTitle: props => <ChatTitle />,
           tabBarIcon: ({color}) => (
             <FontAwesome size={28} name="comments" color={color} />
           ),
         }}
       />
       <Tab.Screen
-        name="settings"
+        name="setting-stack"
         component={SettingStack}
         options={{
           headerShown: false,

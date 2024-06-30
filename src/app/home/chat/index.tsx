@@ -22,6 +22,7 @@ import {getAuth} from 'firebase/auth';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/redux/store';
 import TypingBubble from '@/components/container/typingBubble';
+import {useHeaderHeight} from '@react-navigation/elements';
 
 // Interface for the message object
 type Message = {
@@ -36,7 +37,7 @@ type Chat = {
   is_processing: boolean;
 };
 
-function ChatScreenContent(): React.JSX.Element {
+function ChatPage(): React.JSX.Element {
   // Get the auth context
   const auth = getAuth().currentUser;
 
@@ -59,6 +60,9 @@ function ChatScreenContent(): React.JSX.Element {
   const [buffer, setBuffer] = useState(0);
 
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Get the header height to add padding to the FlatList
+  const headerHeight = useHeaderHeight();
 
   const flatListRef = useRef<FlatList>(null);
   // A reference to the timeout for trigger LLM.
@@ -210,9 +214,20 @@ function ChatScreenContent(): React.JSX.Element {
   );
 
   return (
-    <View style={{flex: 1, paddingHorizontal: 10}}>
-      <View style={{flex: 1}}>
+    <View
+      style={{
+        flex: 1,
+        paddingHorizontal: 10,
+      }}>
+      <View
+        style={{
+          flex: 1,
+        }}>
         <FlatList
+          style={{
+            flex: 1,
+            paddingTop: headerHeight,
+          }}
           ref={flatListRef}
           data={messages}
           keyExtractor={(item, index) => index.toString()}
@@ -235,7 +250,11 @@ function ChatScreenContent(): React.JSX.Element {
         />
       </View>
       <View
-        style={{flexDirection: 'row', alignItems: 'center', marginBottom: 10}}>
+        style={{
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: 10,
+        }}>
         <TextInput
           style={styles.inputField}
           placeholder="Type your message"
@@ -258,7 +277,6 @@ const styles = StyleSheet.create({
     borderColor: 'gray',
     borderRadius: 5,
     padding: 10,
-    marginRight: 10, // Add right margin to match the message bubble
   },
   BubbleMessage: {
     borderRadius: 20, // Set a higher value for a rounded container
@@ -267,4 +285,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ChatScreenContent;
+export default ChatPage;
