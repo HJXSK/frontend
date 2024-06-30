@@ -18,7 +18,7 @@ import User from './user';
 import ScrollPage from '@/components/page';
 import {SettingItem, SettingSection} from '@/components/settings/item';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {SettingStackParamList} from '../settingStack';
+import {AppStackParamList} from '@/app';
 
 const styles = StyleSheet.create({
   signOutButtonContainer: {
@@ -31,7 +31,10 @@ const styles = StyleSheet.create({
   },
 });
 
-type MainSettingsProps = NativeStackScreenProps<SettingStackParamList, 'main'>;
+type MainSettingsProps = NativeStackScreenProps<
+  AppStackParamList,
+  'setting-main'
+>;
 
 const MainSettingsPage: React.FC<MainSettingsProps> = ({
   navigation,

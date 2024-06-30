@@ -9,13 +9,13 @@ import {useEffect, useState, useMemo, useLayoutEffect} from 'react';
 import {useDispatch} from 'react-redux';
 import {update_profile} from '@/redux/features/user/userProfileSlice';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {SettingStackParamList} from '../settingStack';
+import {AppStackParamList} from '@/app';
 
 type UserType = Record<string, any>;
 
 type UserSettingPageProps = NativeStackScreenProps<
-  SettingStackParamList,
-  'user'
+  AppStackParamList,
+  'setting-user'
 >;
 
 // Define the UserPage component
