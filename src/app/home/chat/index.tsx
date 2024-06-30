@@ -23,12 +23,14 @@ import {useSelector} from 'react-redux';
 import {RootState} from '@/redux/store';
 import TypingBubble from '@/components/container/typingBubble';
 import {useHeaderHeight} from '@react-navigation/elements';
+import dayjs from 'dayjs';
+import {Timestamp} from 'firebase/firestore';
 
 // Interface for the message object
 type Message = {
   text: string;
   sender_id: string;
-  timestamp: Date;
+  timestamp: Timestamp;
   // isUser: boolean;
 };
 
@@ -137,7 +139,7 @@ function ChatPage(): React.JSX.Element {
     const newMessage: Message = {
       text: inputText,
       sender_id: uid,
-      timestamp: new Date(),
+      timestamp: Timestamp.now(),
     };
 
     try {
@@ -217,7 +219,6 @@ function ChatPage(): React.JSX.Element {
     <View
       style={{
         flex: 1,
-        paddingHorizontal: 10,
       }}>
       <View
         style={{
@@ -231,12 +232,33 @@ function ChatPage(): React.JSX.Element {
           ref={flatListRef}
           data={messages}
           keyExtractor={(item, index) => index.toString()}
-          renderItem={({item}) => (
-            <MessageBubble
-              message={item.text}
-              isUser={item.sender_id == auth!.uid}
-            />
-          )}
+          renderItem={({item, index}) => {
+            const thisTimestamp = dayjs.unix(item.timestamp.seconds);
+            // display the timestamp if the message is the first in the list or if the previous message was sent more than 2 minutes ago
+            return (
+              <>
+                {(index == 0 ||
+                  thisTimestamp.diff(
+                    dayjs.unix(messages[index - 1].timestamp.seconds),
+                    'minute',
+                  ) > 2) && (
+                  <Text
+                    style={{
+                      textAlign: 'center',
+                      fontSize: 10,
+                      color: 'gray',
+                      margin: 10,
+                    }}>
+                    {thisTimestamp.format('MMM D, YYYY [at] h:mm A')}
+                  </Text>
+                )}
+                <MessageBubble
+                  message={item.text}
+                  isUser={item.sender_id == auth!.uid}
+                />
+              </>
+            );
+          }}
           contentContainerStyle={{
             flexGrow: 1,
             paddingTop: 10,
