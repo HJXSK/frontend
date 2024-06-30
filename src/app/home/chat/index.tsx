@@ -284,7 +284,7 @@ function ChatPage(): React.JSX.Element {
           onLayout={() =>
             flatListRef.current!.scrollToOffset({offset: 0, animated: true})
           }
-          // ListHeaderComponent={isProcessing ? <TypingBubble /> : null}
+          ListHeaderComponent={isProcessing ? <TypingBubble /> : null}
         />
       </View>
       <View
@@ -294,8 +294,9 @@ function ChatPage(): React.JSX.Element {
           marginBottom: 10,
         }}>
         <TextInput
+          multiline
           style={styles.inputField}
-          placeholder="Type your message"
+          placeholder="message..."
           value={inputText}
           onChangeText={text => {
             setInputText(text);
