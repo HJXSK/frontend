@@ -1,13 +1,17 @@
-import {Tabs} from 'expo-router';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
-import {getFocusedRouteNameFromRoute} from '@react-navigation/native';
-import ChatTitle from '@/components/chat/chatTitle';
+import ChatTitle from './chat/chatTitle';
+import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import ChatPage from '@/app/home/chat/index';
+import SettingStack from './settings/settingStack';
 
-export default function TabLayout() {
+const Tab = createBottomTabNavigator();
+
+export default function HomeTab() {
   return (
-    <Tabs>
-      <Tabs.Screen
-        name="chat/index"
+    <Tab.Navigator>
+      <Tab.Screen
+        name="chat"
+        component={ChatPage}
         options={{
           title: 'Chat',
           headerTitle: props => <ChatTitle />,
@@ -16,16 +20,16 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
+      <Tab.Screen
         name="settings"
+        component={SettingStack}
         options={{
           headerShown: false,
-          title: 'Settings',
           tabBarIcon: ({color}) => (
             <FontAwesome size={28} name="cog" color={color} />
           ),
         }}
       />
-    </Tabs>
+    </Tab.Navigator>
   );
 }

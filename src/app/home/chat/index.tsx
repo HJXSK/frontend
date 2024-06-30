@@ -244,12 +244,8 @@ function ChatScreenContent(): React.JSX.Element {
             setInputText(text);
             startTyping();
           }}
+          onSubmitEditing={sendMessage}
         />
-        <TouchableOpacity
-          style={{backgroundColor: '#007AFF', borderRadius: 5, padding: 10}}
-          onPress={sendMessage}>
-          <Text style={{color: 'white'}}>Send</Text>
-        </TouchableOpacity>
       </View>
     </View>
   );

@@ -1,18 +1,23 @@
 import {View, Text, StyleSheet} from 'react-native';
-import Avatar from './avatar';
-import {router} from 'expo-router';
+import Avatar from '@/components/settings/avatar';
 import {useSelector} from 'react-redux';
 import {selectUserProfile} from '@/redux/features/user/userProfileSlice';
-import {SettingItemRaw, SettingSection} from '../item';
+import {SettingItemRaw, SettingSection} from '@components/settings/item';
 
-const User: React.FC = () => {
+type UserProps = {
+  navigation: any;
+};
+
+function User({navigation}: UserProps): JSX.Element {
   const userProfile = useSelector(selectUserProfile);
+
+  console.log(userProfile.gs_user_name, userProfile.gs_user_bio);
   return (
     <SettingSection>
       <SettingItemRaw
         category="category"
         showBorder={false}
-        onPress={() => router.push('/home/(tabs)/settings/user')}
+        onPress={() => navigation.navigate('user')}
         before={<Avatar />}>
         <View style={styles.content}>
           <Text style={styles.name}>{userProfile.gs_user_name}</Text>
@@ -21,7 +26,7 @@ const User: React.FC = () => {
       </SettingItemRaw>
     </SettingSection>
   );
-};
+}
 
 const styles = StyleSheet.create({
   content: {

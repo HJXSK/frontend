@@ -11,9 +11,7 @@ const Avatar: React.FC<AvatarProps> = ({
   height = 60,
   src,
 }): JSX.Element => {
-  const source = src
-    ? {uri: src}
-    : require('../../../assets/default_avatar.png');
+  const source = src ? {uri: src} : require('../../assets/default_avatar.png');
 
   return (
     <Image

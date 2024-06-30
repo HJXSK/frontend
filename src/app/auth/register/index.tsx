@@ -1,5 +1,8 @@
-import {Stack, router} from 'expo-router';
-import {getAuth, createUserWithEmailAndPassword, sendEmailVerification, updateProfile} from "firebase/auth";
+import {
+  getAuth,
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+} from 'firebase/auth';
 import {useState} from 'react';
 import {
   Text,
@@ -15,14 +18,19 @@ import {useForm, Controller} from 'react-hook-form';
 import {useTheme} from '../../../themes';
 import {FIREBASE_AUTH} from '../../../firebase/firebaseConfig';
 
+import {AppStackParamList} from '@/app';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+
 type FormData = {
   email: string;
   password: string;
   confirmpw: string;
 };
 
+type SignUpPageProps = NativeStackScreenProps<AppStackParamList, 'sign-up'>;
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/;
-function SignUpScreen(): React.JSX.Element {
+function SignUpPage({navigation}: SignUpPageProps): React.JSX.Element {
   const [loading, setLoading] = useState<boolean>(false);
   const {
     control,
@@ -46,27 +54,31 @@ function SignUpScreen(): React.JSX.Element {
     setLoading(true);
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(FIREBASE_AUTH, data.email, data.password);
+      const userCredential = await createUserWithEmailAndPassword(
+        FIREBASE_AUTH,
+        data.email,
+        data.password,
+      );
       const user = userCredential.user;
       await sendEmailVerification(user); // Send verification email
 
-      console.log("Verification email sent successfully");
+      console.log('Verification email sent successfully');
       Alert.alert(
         'Sign up success',
         'A verification email has been sent to your email address.',
         [
           {
             text: 'OK',
-            onPress: () => router.replace('/auth/sign-in'), // Navigate to the login screen
+            onPress: () => navigation.navigate('sign-in'), // Navigate to the login screen
           },
-        ]
+        ],
       );
     } catch (error) {
       console.log(error);
       const errorCode = error.code;
       const errorMessage = error.message;
       console.error(errorCode, errorMessage);
-      
+
       //Validate if email is in use
       if (errorCode === 'auth/email-already-in-use') {
         Alert.alert(
@@ -81,40 +93,47 @@ function SignUpScreen(): React.JSX.Element {
     setLoading(false);
   };
 
-
   return (
     <View
       style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <Stack.Screen options={{headerShown: true, title: 'Sign Up'}} />
-      <Text style={{
-        margin: 20,
-        fontSize:15,
-      }} >Welcome! Please fill in your information.</Text>
-      
-      <View style = {styles.inputContainer}>
+      <Text
+        style={{
+          margin: 20,
+          fontSize: 15,
+        }}>
+        Welcome! Please fill in your information.
+      </Text>
+
+      <View style={styles.inputContainer}>
         <Controller
           control={control}
           rules={{
             required: 'Email is required',
-            pattern: {value: EMAIL_REGEX, message: 'Email is invalid',
-            },
+            pattern: {value: EMAIL_REGEX, message: 'Email is invalid'},
           }}
-          render={({field: {onChange, onBlur, value},fieldState: {error}}) => (
+          render={({field: {onChange, onBlur, value}, fieldState: {error}}) => (
             <>
-                <TextInput
-                  placeholder={'Email'}
-                  onBlur={onBlur}
-                  onChangeText={onChange}
-                  value={value}
-                  autoCorrect={false}
-                  autoCapitalize="none"
-                  style={[
-                    styles.inputField,
-                    {backgroundColor: theme.colors.foreground},
-                  ]}
-                />
+              <TextInput
+                placeholder={'Email'}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                value={value}
+                autoCorrect={false}
+                autoCapitalize="none"
+                style={[
+                  styles.inputField,
+                  {backgroundColor: theme.colors.foreground},
+                ]}
+              />
               {error && (
-                <Text style = {{alignSelf: 'stretch', borderLeftWidth: 45, color: 'red' }}>{error.message || 'Error'}</Text>
+                <Text
+                  style={{
+                    alignSelf: 'stretch',
+                    borderLeftWidth: 45,
+                    color: 'red',
+                  }}>
+                  {error.message || 'Error'}
+                </Text>
               )}
             </>
           )}
@@ -126,26 +145,34 @@ function SignUpScreen(): React.JSX.Element {
             required: 'Password is required',
             pattern: {
               value: /(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/,
-              message:'Password requirement: includes Uppercase, Lowercase, Number and 8 or more characters.'
+              message:
+                'Password requirement: includes Uppercase, Lowercase, Number and 8 or more characters.',
             },
           }}
           render={({field: {onChange, onBlur, value}, fieldState: {error}}) => (
             <>
-                <TextInput
-                  placeholder={'password'}
-                  onBlur={onBlur}
-                  secureTextEntry={true}
-                  onChangeText={onChange}
-                  value={value}
-                  autoCorrect={false}
-                  autoCapitalize="none"
-                  style={[
-                    styles.inputField,
-                    {backgroundColor: theme.colors.foreground},
-                  ]}
-                />
+              <TextInput
+                placeholder={'password'}
+                onBlur={onBlur}
+                secureTextEntry={true}
+                onChangeText={onChange}
+                value={value}
+                autoCorrect={false}
+                autoCapitalize="none"
+                style={[
+                  styles.inputField,
+                  {backgroundColor: theme.colors.foreground},
+                ]}
+              />
               {error && (
-                <Text style = {{alignSelf: 'stretch', borderLeftWidth: 45, color: 'red' }}>{error.message || 'Error'}</Text>
+                <Text
+                  style={{
+                    alignSelf: 'stretch',
+                    borderLeftWidth: 45,
+                    color: 'red',
+                  }}>
+                  {error.message || 'Error'}
+                </Text>
               )}
             </>
           )}
@@ -159,21 +186,28 @@ function SignUpScreen(): React.JSX.Element {
           }}
           render={({field: {onChange, onBlur, value}, fieldState: {error}}) => (
             <>
-                <TextInput
-                  placeholder={'Confirm password'}
-                  onBlur={onBlur}
-                  secureTextEntry={true}
-                  onChangeText={onChange}
-                  value={value}
-                  autoCorrect={false}
-                  autoCapitalize="none"
-                  style={[
-                    styles.inputField,
-                    {backgroundColor: theme.colors.foreground},
-                  ]}
-                />
+              <TextInput
+                placeholder={'Confirm password'}
+                onBlur={onBlur}
+                secureTextEntry={true}
+                onChangeText={onChange}
+                value={value}
+                autoCorrect={false}
+                autoCapitalize="none"
+                style={[
+                  styles.inputField,
+                  {backgroundColor: theme.colors.foreground},
+                ]}
+              />
               {error && (
-              <Text style = {{alignSelf: 'stretch', borderLeftWidth: 45, color: 'red' }}>{error.message || 'Error'}</Text>
+                <Text
+                  style={{
+                    alignSelf: 'stretch',
+                    borderLeftWidth: 45,
+                    color: 'red',
+                  }}>
+                  {error.message || 'Error'}
+                </Text>
               )}
             </>
           )}
@@ -195,7 +229,7 @@ function SignUpScreen(): React.JSX.Element {
               <ActivityIndicator size="small" color={theme.colors.foreground} />
             ) : (
               <Text style={{textAlign: 'center', color: 'white'}}>Sign Up</Text>
-           )}
+            )}
           </View>
         </TouchableOpacity>
       </View>
@@ -229,4 +263,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SignUpScreen;
+export default SignUpPage;

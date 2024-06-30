@@ -11,15 +11,14 @@ import {
   selectSettings,
   toggle_ProfanityFilter,
 } from '@/redux/features/settings/settingsSlice';
-import {RootState} from '@/redux/store';
 import {FontAwesome} from '@expo/vector-icons';
-import {UnknownAction} from '@reduxjs/toolkit';
 import {useTheme} from '@/themes';
 import {getAuth, signOut} from 'firebase/auth';
-import User from '@/components/settings/user';
-import {Stack} from 'expo-router';
+import User from './user';
 import ScrollPage from '@/components/page';
 import {SettingItem, SettingSection} from '@/components/settings/item';
+import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {SettingStackParamList} from '../settingStack';
 
 const styles = StyleSheet.create({
   signOutButtonContainer: {
@@ -32,7 +31,11 @@ const styles = StyleSheet.create({
   },
 });
 
-const Settings: React.FC = (): JSX.Element => {
+type MainSettingsProps = NativeStackScreenProps<SettingStackParamList, 'main'>;
+
+const MainSettingsPage: React.FC<MainSettingsProps> = ({
+  navigation,
+}): JSX.Element => {
   // Get the current theme
   const theme = useTheme();
   const dispatch = useDispatch();
@@ -55,12 +58,7 @@ const Settings: React.FC = (): JSX.Element => {
 
   return (
     <ScrollPage>
-      <Stack.Screen
-        options={{
-          title: 'Settings',
-        }}
-      />
-      <User />
+      <User navigation={navigation} />
       <SettingSection>
         <SettingItem
           title="Profanity Filter"
@@ -95,4 +93,4 @@ const Settings: React.FC = (): JSX.Element => {
   );
 };
 
-export default Settings;
+export default MainSettingsPage;
