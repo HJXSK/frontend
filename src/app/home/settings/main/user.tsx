@@ -11,13 +11,12 @@ type UserProps = {
 function User({navigation}: UserProps): JSX.Element {
   const userProfile = useSelector(selectUserProfile);
 
-  console.log(userProfile.gs_user_name, userProfile.gs_user_bio);
   return (
     <SettingSection>
       <SettingItemRaw
         category="category"
         showBorder={false}
-        onPress={() => navigation.navigate('user')}
+        onPress={() => navigation.navigate('setting-user')}
         before={<Avatar />}>
         <View style={styles.content}>
           <Text style={styles.name}>{userProfile.gs_user_name}</Text>

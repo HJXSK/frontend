@@ -3,9 +3,10 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   FlatList,
   StyleSheet,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {FIRESTORE, FUNCTIONS} from '@/firebase/firebaseConfig';
 import {httpsCallable} from 'firebase/functions';
@@ -25,6 +26,7 @@ import TypingBubble from '@/components/container/typingBubble';
 import {useHeaderHeight} from '@react-navigation/elements';
 import dayjs from 'dayjs';
 import {Timestamp} from 'firebase/firestore';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 // Interface for the message object
 type Message = {
@@ -216,102 +218,103 @@ function ChatPage(): React.JSX.Element {
   );
 
   return (
-    <View
-      style={{
-        flex: 1,
-      }}>
-      <View
-        style={{
-          flex: 1,
-        }}>
-        <FlatList
+    <SafeAreaView style={{flex: 1}}>
+      <KeyboardAvoidingView
+        style={{flex: 1}}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <View
           style={{
             flex: 1,
-          }}
-          // to correct the scroll position
-          scrollIndicatorInsets={{
-            top: -headerHeight,
-            left: 0,
-            bottom: headerHeight,
-            right: 0,
-          }}
-          getItemLayout={(data, index) => ({
-            length: 100,
-            offset: 100 * index,
-            index,
-          })}
-          // important for the FlatList to start from the bottom to achieve scroll to latest
-          inverted
-          ref={flatListRef}
-          data={messages}
-          keyExtractor={(item, index) => index.toString()}
-          renderItem={({item, index}) => {
-            const thisTimestamp = dayjs.unix(item.timestamp.seconds);
-            // display the timestamp if the message is the first in the list or if the previous message was sent more than 2 minutes ago
-            return (
-              <>
-                <MessageBubble
-                  message={item.text}
-                  isUser={item.sender_id == auth!.uid}
-                />
-                {(index == messages.length - 1 ||
-                  thisTimestamp.diff(
-                    dayjs.unix(messages[index + 1].timestamp.seconds),
-                    'minute',
-                  ) > 2) && (
-                  <Text
-                    style={{
-                      textAlign: 'center',
-                      fontSize: 10,
-                      color: 'gray',
-                      margin: 10,
-                      marginTop:
-                        index == messages.length - 1 ? headerHeight : 10,
-                    }}>
-                    {thisTimestamp.format('MMM D, YYYY [at] h:mm A')}
-                  </Text>
-                )}
-              </>
-            );
-          }}
-          contentContainerStyle={{
-            flexGrow: 1,
+          }}>
+          <FlatList
+            style={{
+              flex: 1,
+            }}
+            keyboardDismissMode="on-drag"
+            // to correct the scroll position
+            scrollIndicatorInsets={{
+              top: -25,
+              left: 0,
+              bottom: 40,
+              right: 0,
+            }}
+            getItemLayout={(data, index) => ({
+              length: 100,
+              offset: 100 * index,
+              index,
+            })}
+            // important for the FlatList to start from the bottom to achieve scroll to latest
+            inverted
+            ref={flatListRef}
+            data={messages}
+            keyExtractor={(item, index) => index.toString()}
+            renderItem={({item, index}) => {
+              const thisTimestamp = dayjs.unix(item.timestamp.seconds);
+              // display the timestamp if the message is the first in the list or if the previous message was sent more than 2 minutes ago
+              return (
+                <>
+                  <MessageBubble
+                    message={item.text}
+                    isUser={item.sender_id == auth!.uid}
+                  />
+                  {(index == messages.length - 1 ||
+                    thisTimestamp.diff(
+                      dayjs.unix(messages[index + 1].timestamp.seconds),
+                      'minute',
+                    ) > 2) && (
+                    <Text
+                      style={{
+                        textAlign: 'center',
+                        fontSize: 10,
+                        color: 'gray',
+                        margin: 10,
+                        marginTop: index == messages.length - 1 ? 50 : 10,
+                      }}>
+                      {thisTimestamp.format('MMM D, YYYY [at] h:mm A')}
+                    </Text>
+                  )}
+                </>
+              );
+            }}
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingVertical: 10,
+            }} // Add top and bottom padding
+            onContentSizeChange={() =>
+              flatListRef.current!.scrollToOffset({offset: 0, animated: true})
+            }
+            onLayout={() =>
+              flatListRef.current!.scrollToOffset({offset: 0, animated: true})
+            }
+            ListHeaderComponent={isProcessing ? <TypingBubble /> : null}
+          />
+        </View>
+        <View
+          style={{
+            flexDirection: 'row',
             paddingVertical: 10,
-          }} // Add top and bottom padding
-          onContentSizeChange={() =>
-            flatListRef.current!.scrollToOffset({offset: 0, animated: true})
-          }
-          onLayout={() =>
-            flatListRef.current!.scrollToOffset({offset: 0, animated: true})
-          }
-          ListHeaderComponent={isProcessing ? <TypingBubble /> : null}
-        />
-      </View>
-      <View
-        style={{
-          flexDirection: 'row',
-          alignItems: 'center',
-          marginBottom: 10,
-        }}>
-        <TextInput
-          multiline
-          style={styles.inputField}
-          placeholder="message..."
-          value={inputText}
-          onChangeText={text => {
-            setInputText(text);
-            startTyping();
-          }}
-          onSubmitEditing={sendMessage}
-        />
-      </View>
-    </View>
+            alignItems: 'center',
+          }}>
+          <TextInput
+            multiline
+            style={styles.inputField}
+            value={inputText}
+            onChangeText={text => {
+              setInputText(text);
+              startTyping();
+            }}
+            onSubmitEditing={sendMessage}
+          />
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   inputField: {
     flex: 1,
+    marginHorizontal: 30,
     borderWidth: 1,
     borderColor: 'gray',
     borderRadius: 5,

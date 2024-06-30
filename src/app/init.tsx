@@ -32,7 +32,7 @@ const InitPage: React.FC<InitPageProps> = ({navigation}): JSX.Element => {
 
   useEffect(() => {
     initializeStore();
-    navigation.navigate('home');
+    navigation.replace('home');
   }, []);
 
   return (

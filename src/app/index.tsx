@@ -14,14 +14,20 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import SignInPage from './auth/sign-in';
 import SignUpPage from './auth/register';
-import Home from './home/homeTab';
+import ChatPage from './home/chat';
 import InitPage from './init';
+import ChatTitle from './home/chat/chatTitle';
+import SettingButton from './home/chat/settingButton';
+import MainSettingPage from './home/settings/main';
+import UserSettingPage from './home/settings/user';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
 export type AppStackParamList = {
   'sign-in': undefined;
   'sign-up': undefined;
+  'setting-main': undefined;
+  'setting-user': undefined;
   home: undefined;
   init: undefined;
 };
@@ -50,8 +56,26 @@ function App(): React.JSX.Element {
                 />
                 <Stack.Screen
                   name="home"
-                  component={Home}
-                  options={{headerShown: false}}
+                  component={ChatPage}
+                  options={({navigation, route}) => ({
+                    title: 'Chat',
+                    headerTitle: () => <ChatTitle />,
+                    headerRight: () => (
+                      <SettingButton navigation={navigation} />
+                    ),
+                    headerTransparent: true,
+                    headerBlurEffect: 'light',
+                  })}
+                />
+                <Stack.Screen
+                  name="setting-main"
+                  component={MainSettingPage}
+                  options={{title: 'Settings'}}
+                />
+                <Stack.Screen
+                  name="setting-user"
+                  component={UserSettingPage}
+                  options={{title: 'User'}}
                 />
               </>
             ) : (
