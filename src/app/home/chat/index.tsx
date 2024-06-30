@@ -90,7 +90,7 @@ function ChatPage(): React.JSX.Element {
 
       const messagesRef = collection(FIRESTORE, 'chats', uid, 'messages');
       // Create a query to order the messages by timestamp in ascending order
-      const messagesQuery = query(messagesRef, orderBy('timestamp', 'asc'));
+      const messagesQuery = query(messagesRef, orderBy('timestamp', 'desc'));
       // Subscribe to the messages snapshot and update the messages state
       unSubMessages = onSnapshot(messagesQuery, snapshot => {
         let temp: Message[] = [];
@@ -227,8 +227,21 @@ function ChatPage(): React.JSX.Element {
         <FlatList
           style={{
             flex: 1,
-            paddingTop: headerHeight,
           }}
+          // to correct the scroll position
+          scrollIndicatorInsets={{
+            top: -headerHeight,
+            left: 0,
+            bottom: headerHeight,
+            right: 0,
+          }}
+          getItemLayout={(data, index) => ({
+            length: 100,
+            offset: 100 * index,
+            index,
+          })}
+          // important for the FlatList to start from the bottom to achieve scroll to latest
+          inverted
           ref={flatListRef}
           data={messages}
           keyExtractor={(item, index) => index.toString()}
@@ -237,9 +250,13 @@ function ChatPage(): React.JSX.Element {
             // display the timestamp if the message is the first in the list or if the previous message was sent more than 2 minutes ago
             return (
               <>
-                {(index == 0 ||
+                <MessageBubble
+                  message={item.text}
+                  isUser={item.sender_id == auth!.uid}
+                />
+                {(index == messages.length - 1 ||
                   thisTimestamp.diff(
-                    dayjs.unix(messages[index - 1].timestamp.seconds),
+                    dayjs.unix(messages[index + 1].timestamp.seconds),
                     'minute',
                   ) > 2) && (
                   <Text
@@ -248,27 +265,26 @@ function ChatPage(): React.JSX.Element {
                       fontSize: 10,
                       color: 'gray',
                       margin: 10,
+                      marginTop:
+                        index == messages.length - 1 ? headerHeight : 10,
                     }}>
                     {thisTimestamp.format('MMM D, YYYY [at] h:mm A')}
                   </Text>
                 )}
-                <MessageBubble
-                  message={item.text}
-                  isUser={item.sender_id == auth!.uid}
-                />
               </>
             );
           }}
           contentContainerStyle={{
             flexGrow: 1,
-            paddingTop: 10,
-            paddingBottom: 10,
+            paddingVertical: 10,
           }} // Add top and bottom padding
           onContentSizeChange={() =>
-            flatListRef.current!.scrollToEnd({animated: true})
+            flatListRef.current!.scrollToOffset({offset: 0, animated: true})
           }
-          onLayout={() => flatListRef.current!.scrollToEnd({animated: true})}
-          ListFooterComponent={isProcessing ? <TypingBubble /> : null}
+          onLayout={() =>
+            flatListRef.current!.scrollToOffset({offset: 0, animated: true})
+          }
+          // ListHeaderComponent={isProcessing ? <TypingBubble /> : null}
         />
       </View>
       <View
