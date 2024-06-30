@@ -1,5 +1,5 @@
 import {StyleSheet, Text, View} from 'react-native';
-import Avatar from '../settings/user/avatar';
+import Avatar from '@/components/settings/avatar';
 import {selectSettings} from '@/redux/features/settings/settingsSlice';
 import {useSelector} from 'react-redux';
 import {STORAGE} from '@/firebase/firebaseConfig';

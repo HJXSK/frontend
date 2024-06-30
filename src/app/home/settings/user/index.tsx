@@ -1,19 +1,27 @@
 import {View, Button, StyleSheet, TextInput, Text} from 'react-native';
-import {Stack} from 'expo-router';
 import {SettingItem, SettingSection} from '@/components/settings/item';
-import Avatar from '@/components/settings/user/avatar';
+import Avatar from '@/components/settings/avatar';
 import ScrollPage from '@/components/page';
 import {getAuth} from 'firebase/auth';
 import {FIRESTORE} from '@/firebase/firebaseConfig';
 import {doc, getDoc, setDoc, updateDoc} from 'firebase/firestore';
-import {useEffect, useState, useMemo} from 'react';
+import {useEffect, useState, useMemo, useLayoutEffect} from 'react';
 import {useDispatch} from 'react-redux';
 import {update_profile} from '@/redux/features/user/userProfileSlice';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {SettingStackParamList} from '../settingStack';
 
 type UserType = Record<string, any>;
 
+type UserSettingPageProps = NativeStackScreenProps<
+  SettingStackParamList,
+  'user'
+>;
+
 // Define the UserPage component
-const UserPage = () => {
+const UserSettingPage: React.FC<UserSettingPageProps> = ({
+  navigation,
+}): JSX.Element => {
   // Get the current authenticated user
   const auth = getAuth().currentUser!;
   const dispatch = useDispatch();
@@ -51,6 +59,14 @@ const UserPage = () => {
     fetchUser();
   }, []);
 
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <Button disabled={!isEdited} title="Done" onPress={saveUser} />
+      ),
+    });
+  }, [navigation]);
+
   /**
    * Save the user info to Firestore
    */
@@ -69,14 +85,6 @@ const UserPage = () => {
 
   return (
     <ScrollPage>
-      <Stack.Screen
-        options={{
-          title: 'User',
-          headerRight: () => (
-            <Button disabled={!isEdited} title="Done" onPress={saveUser} />
-          ),
-        }}
-      />
       <View style={styles.avatarWrapper}>
         <Avatar width={100} height={100} />
       </View>
@@ -122,4 +130,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default UserPage;
+export default UserSettingPage;

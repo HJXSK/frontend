@@ -1,4 +1,3 @@
-import {Stack, router} from 'expo-router';
 import {signInWithEmailAndPassword} from 'firebase/auth';
 import {useState} from 'react';
 import {
@@ -21,12 +20,17 @@ import Divider from './divider';
 import {useTheme} from '../../../themes';
 import {FIREBASE_AUTH} from '../../../firebase/firebaseConfig';
 
+import {AppStackParamList} from '@/app';
+import {NativeStackScreenProps} from '@react-navigation/native-stack';
+
 type FormData = {
   email: string;
   password: string;
 };
 
-function SignInScreen(): React.JSX.Element {
+type SignInPageProps = NativeStackScreenProps<AppStackParamList, 'sign-in'>;
+
+function SignInPage({navigation}: SignInPageProps): React.JSX.Element {
   // state that indicates if the user is logging in.
   const [loading, setLoading] = useState<boolean>(false);
   const {
@@ -122,7 +126,6 @@ function SignInScreen(): React.JSX.Element {
   return (
     <View
       style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <Stack.Screen options={{headerShown: false, title: 'Login'}} />
       <Text style={{margin: 100}}>Testing</Text>
       {/* Email */}
       <Controller
@@ -223,7 +226,7 @@ function SignInScreen(): React.JSX.Element {
 
         <TouchableOpacity
           onPress={() => {
-            router.push('auth/register');
+            navigation.navigate('sign-up');
           }}>
           <Text style={[styles.miscButton, {color: theme.colors.primary}]}>
             Sign up
@@ -277,4 +280,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SignInScreen;
+export default SignInPage;

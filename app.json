@@ -12,7 +12,6 @@
       "googleServicesFile": "./src/firebase/google-sign-in/GoogleService-Info.plist"
     },
     "plugins": [
-      "expo-router",
       "@react-native-google-signin/google-signin"
     ]
   }
