@@ -9,6 +9,11 @@ type Theme = {
     danger: string;
     disabled: string;
   };
+  sizes: {
+    sm: number;
+    md: number;
+    lg: number;
+  };
 };
 
 const LightTheme: Theme = {
@@ -22,6 +27,11 @@ const LightTheme: Theme = {
     // success: palette.green,
     // danger: palette.red,
     // failure: palette.red,
+  },
+  sizes: {
+    sm: 30,
+    md: 40,
+    lg: 60,
   },
 };
 

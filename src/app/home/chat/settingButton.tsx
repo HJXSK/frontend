@@ -1,6 +1,5 @@
-import {Pressable} from 'react-native';
+import {TouchableOpacity} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
-import {useState} from 'react';
 
 type settingButtonProps = {
   navigation: any;
@@ -9,23 +8,13 @@ type settingButtonProps = {
 const SettingButton: React.FC<settingButtonProps> = ({
   navigation,
 }): JSX.Element => {
-  const [isPressing, setIsPressing] = useState(false);
-
   return (
-    <Pressable
-      onPressIn={() => {
-        setIsPressing(true);
-      }}
-      onPressOut={() => {
-        setIsPressing(false);
+    <TouchableOpacity
+      onPress={() => {
         navigation.navigate('setting-main');
       }}>
-      <Ionicons
-        name="cog-outline"
-        size={30}
-        color={isPressing ? 'gray' : 'black'}
-      />
-    </Pressable>
+      <Ionicons name="cog-outline" size={30} color="black" />
+    </TouchableOpacity>
   );
 };
 
