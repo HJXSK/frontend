@@ -27,6 +27,8 @@ import {useHeaderHeight} from '@react-navigation/elements';
 import dayjs from 'dayjs';
 import {Timestamp} from 'firebase/firestore';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {useTheme} from '@/themes';
+import SendButton from './sendButton';
 
 // Interface for the message object
 type Message = {
@@ -217,8 +219,10 @@ function ChatPage(): React.JSX.Element {
     </View>
   );
 
+  const theme = useTheme();
+
   return (
-    <SafeAreaView style={{flex: 1}}>
+    <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.foreground}}>
       <KeyboardAvoidingView
         style={{flex: 1}}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
@@ -229,6 +233,7 @@ function ChatPage(): React.JSX.Element {
           <FlatList
             style={{
               flex: 1,
+              backgroundColor: theme.colors.background,
             }}
             keyboardDismissMode="on-drag"
             // to correct the scroll position
@@ -289,22 +294,22 @@ function ChatPage(): React.JSX.Element {
             ListHeaderComponent={isProcessing ? <TypingBubble /> : null}
           />
         </View>
-        <View
-          style={{
-            flexDirection: 'row',
-            paddingVertical: 10,
-            alignItems: 'center',
-          }}>
-          <TextInput
-            multiline
-            style={styles.inputField}
-            value={inputText}
-            onChangeText={text => {
-              setInputText(text);
-              startTyping();
-            }}
-            onSubmitEditing={sendMessage}
-          />
+        <View style={styles.inputContainer}>
+          <View style={styles.inputField}>
+            <TextInput
+              multiline
+              style={styles.textInput}
+              value={inputText}
+              onChangeText={text => {
+                setInputText(text);
+                startTyping();
+              }}
+            />
+            <SendButton
+              onPress={sendMessage}
+              disabled={inputText.length == 0}
+            />
+          </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -312,13 +317,31 @@ function ChatPage(): React.JSX.Element {
 }
 
 const styles = StyleSheet.create({
-  inputField: {
-    flex: 1,
-    marginHorizontal: 30,
-    borderWidth: 1,
+  inputContainer: {
+    borderTopWidth: 0.2,
     borderColor: 'gray',
-    borderRadius: 5,
-    padding: 10,
+    flexDirection: 'row',
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  inputField: {
+    width: '80%',
+    flexDirection: 'row',
+    borderRadius: 15,
+    borderWidth: 0.2,
+    borderColor: 'gray',
+    justifyContent: 'center',
+    alignItems: 'flex-end',
+  },
+
+  textInput: {
+    flex: 1,
+    alignSelf: 'center',
+    marginHorizontal: 10,
+    paddingTop: 0,
+    fontSize: 16,
+    textAlignVertical: 'top',
   },
   BubbleMessage: {
     borderRadius: 20, // Set a higher value for a rounded container
