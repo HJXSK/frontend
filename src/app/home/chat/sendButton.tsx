@@ -8,7 +8,7 @@ const SendButton: React.FC<SendButtonProps> = (props): JSX.Element => {
   const theme = useTheme();
 
   return (
-    <TouchableOpacity {...props} activeOpacity={0.3} disabled={props.disabled}>
+    <TouchableOpacity {...props} activeOpacity={0.3}>
       <MaterialCommunityIcons
         name="arrow-up-circle"
         size={theme.sizes.sm}

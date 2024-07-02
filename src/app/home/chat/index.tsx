@@ -22,20 +22,29 @@ import {
 import {getAuth} from 'firebase/auth';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/redux/store';
-import TypingBubble from '@/components/container/typingBubble';
 import {useHeaderHeight} from '@react-navigation/elements';
-import dayjs from 'dayjs';
 import {Timestamp} from 'firebase/firestore';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useTheme} from '@/themes';
-import SendButton from './sendButton';
+import SendButton from './SendButton';
+import AudioBar from './AudioBar';
+import MessageList from './MessageList';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
+import {Gesture, GestureDetector} from 'react-native-gesture-handler';
+import {FontAwesome5} from '@expo/vector-icons';
+import {AntDesign} from '@expo/vector-icons';
 
 // Interface for the message object
-type Message = {
-  text: string;
+export type Message = {
+  content: string;
   sender_id: string;
   timestamp: Timestamp;
-  // isUser: boolean;
+  type: 'text' | 'audio' | 'image';
 };
 
 type Chat = {
@@ -46,7 +55,7 @@ type Chat = {
 function ChatPage(): React.JSX.Element {
   // Get the auth context
   const auth = getAuth().currentUser;
-
+  const theme = useTheme();
   //
   const requestLLM = httpsCallable(FUNCTIONS, 'requestLLM');
 
@@ -60,6 +69,10 @@ function ChatPage(): React.JSX.Element {
   // State to hold the user input text
   const [inputText, setInputText] = useState('');
 
+  const [inputType, setInputType] = useState<'text' | 'audio' | 'image'>(
+    'text',
+  );
+
   // State to hold the typing status
   const [isTyping, setIsTyping] = useState(false);
   // State to hold the number of unprocessed messages
@@ -70,7 +83,6 @@ function ChatPage(): React.JSX.Element {
   // Get the header height to add padding to the FlatList
   const headerHeight = useHeaderHeight();
 
-  const flatListRef = useRef<FlatList>(null);
   // A reference to the timeout for trigger LLM.
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   // clears timeout when component unmounts
@@ -141,9 +153,10 @@ function ChatPage(): React.JSX.Element {
     };
 
     const newMessage: Message = {
-      text: inputText,
+      content: inputText,
       sender_id: uid,
       timestamp: Timestamp.now(),
+      type: 'text',
     };
 
     try {
@@ -192,124 +205,120 @@ function ChatPage(): React.JSX.Element {
     }, delay);
   };
 
-  // Custom message bubble component
-  const MessageBubble = ({
-    message,
-    isUser,
-  }: {
-    message: string;
-    isUser: boolean;
-  }) => (
-    <View
-      style={{
-        flexDirection: 'row',
-        justifyContent: isUser ? 'flex-end' : 'flex-start',
-        marginBottom: 10,
-        marginRight: isUser ? 10 : 50, // Add right margin for user message bubble, increase value to create space
-        marginLeft: isUser ? 50 : 10, // Add left margin for other message bubbles, increase value to create space
-      }}>
-      <View
-        style={{
-          ...styles.BubbleMessage,
-          backgroundColor: isUser ? '#B2DFFC' : '#007AFF',
-          borderColor: isUser ? '#B2DFFC' : '#007AFF',
-        }}>
-        <Text style={{color: isUser ? 'black' : 'white'}}>{message}</Text>
-      </View>
-    </View>
-  );
+  // State to hold path of the audio recording
+  const [audio, setAudio] = useState<string | null>();
+  // State to indicate if the audio recording should be cancelled
+  const [cancel, setCancel] = useState<boolean>(false);
 
-  const theme = useTheme();
+  // Shared value for the offset of the pan gesture
+  const offset = useSharedValue<number>(0);
+
+  // Shared value for the pressing state of the long press gesture
+  const isPressing = useSharedValue(0);
+
+  // SideEffect that sends the audio to the server when the audio state changes
+  useEffect(() => {
+    if (audio && !cancel) {
+      console.log('sending audio', audio);
+    }
+    setCancel(false);
+  }, [audio]);
+
+  // Gesture detections including pan and long press for audio input
+  const pan = Gesture.Pan()
+    .onChange(event => {
+      if (event.translationX > 0) {
+        return;
+      }
+      if (event.translationX < -150) {
+        console.log('cancel');
+        runOnJS(setCancel)(true);
+        runOnJS(setInputType)('text');
+        return;
+      }
+      offset.value = event.translationX;
+    })
+    .onFinalize(event => {
+      offset.value = withSpring(0);
+    });
+
+  const longPress = Gesture.LongPress()
+    .minDuration(200)
+    .shouldCancelWhenOutside(false)
+    .maxDistance(3000)
+    .onBegin(() => {
+      isPressing.value = 0.5;
+    })
+    .onStart(() => {
+      runOnJS(setInputType)('audio');
+    })
+    .onEnd(() => {
+      runOnJS(setInputType)('text');
+    })
+    .onFinalize(() => {
+      isPressing.value = 1;
+    });
+
+  // The composed gesture that is used for the audio input
+  const compose = Gesture.Simultaneous(longPress, pan);
+
+  const animatedStyles = useAnimatedStyle(() => ({
+    transform: [{translateX: offset.value}],
+  }));
 
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.foreground}}>
       <KeyboardAvoidingView
         style={{flex: 1}}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View
-          style={{
-            flex: 1,
-          }}>
-          <FlatList
-            style={{
-              flex: 1,
-              backgroundColor: theme.colors.background,
-            }}
-            keyboardDismissMode="on-drag"
-            // to correct the scroll position
-            scrollIndicatorInsets={{
-              top: -25,
-              left: 0,
-              bottom: 40,
-              right: 0,
-            }}
-            getItemLayout={(data, index) => ({
-              length: 100,
-              offset: 100 * index,
-              index,
-            })}
-            // important for the FlatList to start from the bottom to achieve scroll to latest
-            inverted
-            ref={flatListRef}
-            data={messages}
-            keyExtractor={(item, index) => index.toString()}
-            renderItem={({item, index}) => {
-              const thisTimestamp = dayjs.unix(item.timestamp.seconds);
-              // display the timestamp if the message is the first in the list or if the previous message was sent more than 2 minutes ago
-              return (
-                <>
-                  <MessageBubble
-                    message={item.text}
-                    isUser={item.sender_id == auth!.uid}
-                  />
-                  {(index == messages.length - 1 ||
-                    thisTimestamp.diff(
-                      dayjs.unix(messages[index + 1].timestamp.seconds),
-                      'minute',
-                    ) > 2) && (
-                    <Text
-                      style={{
-                        textAlign: 'center',
-                        fontSize: 10,
-                        color: 'gray',
-                        margin: 10,
-                        marginTop: index == messages.length - 1 ? 50 : 10,
-                      }}>
-                      {thisTimestamp.format('MMM D, YYYY [at] h:mm A')}
-                    </Text>
-                  )}
-                </>
-              );
-            }}
-            contentContainerStyle={{
-              flexGrow: 1,
-              paddingVertical: 10,
-            }} // Add top and bottom padding
-            onContentSizeChange={() =>
-              flatListRef.current!.scrollToOffset({offset: 0, animated: true})
-            }
-            onLayout={() =>
-              flatListRef.current!.scrollToOffset({offset: 0, animated: true})
-            }
-            ListHeaderComponent={isProcessing ? <TypingBubble /> : null}
-          />
-        </View>
+        <MessageList messages={messages} showHeader={isProcessing} />
+
         <View style={styles.inputContainer}>
-          <View style={styles.inputField}>
-            <TextInput
-              multiline
-              style={styles.textInput}
-              value={inputText}
-              onChangeText={text => {
-                setInputText(text);
-                startTyping();
-              }}
-            />
-            <SendButton
-              onPress={sendMessage}
-              disabled={inputText.length == 0}
-            />
-          </View>
+          {inputType === 'audio' ? (
+            <AudioBar animatedStyles={animatedStyles} audioSetter={setAudio} />
+          ) : (
+            <>
+              <View
+                style={{
+                  flex: 1,
+                  justifyContent: 'flex-end',
+                  flexDirection: 'row',
+                }}>
+                <AntDesign name="plus" size={20} color="rgba(0,0,0, 0.8)" />
+              </View>
+              <View style={styles.textWrapper}>
+                {/* TextInput */}
+                <TextInput
+                  multiline
+                  style={styles.textInput}
+                  value={inputText}
+                  onChangeText={text => {
+                    setInputText(text);
+                    startTyping();
+                  }}
+                />
+                <SendButton
+                  onPress={sendMessage}
+                  disabled={inputText.length == 0}
+                />
+              </View>
+            </>
+          )}
+          {/* Audio input */}
+          <GestureDetector gesture={compose}>
+            <Animated.View
+              style={{
+                flex: 1,
+                opacity: isPressing,
+              }}>
+              <FontAwesome5
+                name="microphone"
+                size={20}
+                color="rgba(0,0,0, 0.4)"
+              />
+            </Animated.View>
+          </GestureDetector>
+          {/* <AudioButton /> */}
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -321,12 +330,14 @@ const styles = StyleSheet.create({
     borderTopWidth: 0.2,
     borderColor: 'gray',
     flexDirection: 'row',
-    paddingVertical: 10,
+    padding: 10,
     alignItems: 'center',
+    gap: 10,
+    height: 50,
     justifyContent: 'center',
   },
-  inputField: {
-    width: '80%',
+  textWrapper: {
+    flex: 10,
     flexDirection: 'row',
     borderRadius: 15,
     borderWidth: 0.2,
@@ -334,7 +345,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'flex-end',
   },
-
   textInput: {
     flex: 1,
     alignSelf: 'center',
@@ -342,11 +352,6 @@ const styles = StyleSheet.create({
     paddingTop: 0,
     fontSize: 16,
     textAlignVertical: 'top',
-  },
-  BubbleMessage: {
-    borderRadius: 20, // Set a higher value for a rounded container
-    paddingHorizontal: 10,
-    paddingVertical: 5,
   },
 });
 

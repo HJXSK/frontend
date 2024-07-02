@@ -17,9 +17,10 @@ import SignUpPage from './auth/register';
 import ChatPage from './home/chat';
 import InitPage from './init';
 import ChatTitle from './home/chat/chatTitle';
-import SettingButton from './home/chat/settingButton';
+import SettingButton from './home/chat/SettingButton';
 import MainSettingPage from './home/settings/main';
 import UserSettingPage from './home/settings/user';
+import {GestureHandlerRootView} from 'react-native-gesture-handler';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -46,53 +47,55 @@ function App(): React.JSX.Element {
     <NavigationContainer>
       <Provider store={store}>
         <ThemeProvider>
-          <Stack.Navigator>
-            {signedIn ? (
-              <>
-                <Stack.Screen
-                  name="init"
-                  component={InitPage}
-                  options={{headerShown: false}}
-                />
-                <Stack.Screen
-                  name="home"
-                  component={ChatPage}
-                  options={({navigation, route}) => ({
-                    title: 'Chat',
-                    headerTitle: () => <ChatTitle />,
-                    headerRight: () => (
-                      <SettingButton navigation={navigation} />
-                    ),
-                    headerTransparent: true,
-                    headerBlurEffect: 'light',
-                  })}
-                />
-                <Stack.Screen
-                  name="setting-main"
-                  component={MainSettingPage}
-                  options={{title: 'Settings'}}
-                />
-                <Stack.Screen
-                  name="setting-user"
-                  component={UserSettingPage}
-                  options={{title: 'User'}}
-                />
-              </>
-            ) : (
-              <>
-                <Stack.Screen
-                  name="sign-in"
-                  component={SignInPage}
-                  options={{headerShown: false, title: 'Sign In'}}
-                />
-                <Stack.Screen
-                  name="sign-up"
-                  component={SignUpPage}
-                  options={{title: 'Sign Up'}}
-                />
-              </>
-            )}
-          </Stack.Navigator>
+          <GestureHandlerRootView style={{flex: 1}}>
+            <Stack.Navigator>
+              {signedIn ? (
+                <>
+                  <Stack.Screen
+                    name="init"
+                    component={InitPage}
+                    options={{headerShown: false}}
+                  />
+                  <Stack.Screen
+                    name="home"
+                    component={ChatPage}
+                    options={({navigation, route}) => ({
+                      title: 'Chat',
+                      headerTitle: () => <ChatTitle />,
+                      headerRight: () => (
+                        <SettingButton navigation={navigation} />
+                      ),
+                      headerTransparent: true,
+                      headerBlurEffect: 'light',
+                    })}
+                  />
+                  <Stack.Screen
+                    name="setting-main"
+                    component={MainSettingPage}
+                    options={{title: 'Settings'}}
+                  />
+                  <Stack.Screen
+                    name="setting-user"
+                    component={UserSettingPage}
+                    options={{title: 'User'}}
+                  />
+                </>
+              ) : (
+                <>
+                  <Stack.Screen
+                    name="sign-in"
+                    component={SignInPage}
+                    options={{headerShown: false, title: 'Sign In'}}
+                  />
+                  <Stack.Screen
+                    name="sign-up"
+                    component={SignUpPage}
+                    options={{title: 'Sign Up'}}
+                  />
+                </>
+              )}
+            </Stack.Navigator>
+          </GestureHandlerRootView>
         </ThemeProvider>
       </Provider>
     </NavigationContainer>
