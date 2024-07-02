@@ -9,10 +9,11 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import {FontAwesome5} from '@expo/vector-icons';
+import {AudioInfo} from '.';
 
 type AudioBarProps = {
   animatedStyles: any;
-  audioSetter: (audio: string | null) => void;
+  audioSetter: (audio: AudioInfo) => void;
 };
 
 const AudioBar: React.FC<AudioBarProps> = forwardRef(
@@ -69,17 +70,16 @@ const AudioBar: React.FC<AudioBarProps> = forwardRef(
     const stopRecording = async () => {
       console.log('Stopping recording..');
       if (!recordingRef.current) {
-        // clear the recording delay timeout
-        // clearTimeout(recordingDelayRef.current!);
         console.log('TOO SHORT');
         return;
       }
+      const {durationMillis} = await recordingRef.current!.getStatusAsync();
       await recordingRef.current!.stopAndUnloadAsync();
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: false,
       });
       const uri = recordingRef.current!.getURI();
-      audioSetter(uri);
+      audioSetter({uri: uri!, duration: durationMillis});
     };
 
     return (
@@ -136,8 +136,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     overflow: 'hidden',
-    borderColor: 'black',
-    borderWidth: 1,
   },
 });
 
