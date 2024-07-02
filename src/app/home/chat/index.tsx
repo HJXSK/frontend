@@ -10,15 +10,7 @@ import {
 } from 'react-native';
 import {FIRESTORE, FUNCTIONS} from '@/firebase/firebaseConfig';
 import {httpsCallable} from 'firebase/functions';
-import {
-  collection,
-  doc,
-  increment,
-  runTransaction,
-  onSnapshot,
-  orderBy,
-  query,
-} from 'firebase/firestore';
+import {collection, doc, onSnapshot, orderBy, query} from 'firebase/firestore';
 import {getAuth} from 'firebase/auth';
 import {useSelector} from 'react-redux';
 import {RootState} from '@/redux/store';
@@ -38,19 +30,27 @@ import Animated, {
 import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import {FontAwesome5} from '@expo/vector-icons';
 import {AntDesign} from '@expo/vector-icons';
+import {sendMessage} from '@/util/firebase';
+
+export type MessageType = 'text' | 'audio' | 'image';
 
 // Interface for the message object
 export type Message = {
-  content: string;
+  content: any;
   sender_id: string;
   timestamp: Timestamp;
-  type: 'text' | 'audio' | 'image';
+  type: MessageType;
 };
 
-type Chat = {
+export type Chat = {
   num_raw: number;
   is_processing: boolean;
 };
+
+export type AudioInfo = {
+  uri: string;
+  duration: number;
+} | null;
 
 function ChatPage(): React.JSX.Element {
   // Get the auth context
@@ -69,9 +69,7 @@ function ChatPage(): React.JSX.Element {
   // State to hold the user input text
   const [inputText, setInputText] = useState('');
 
-  const [inputType, setInputType] = useState<'text' | 'audio' | 'image'>(
-    'text',
-  );
+  const [inputType, setInputType] = useState<MessageType>('text');
 
   // State to hold the typing status
   const [isTyping, setIsTyping] = useState(false);
@@ -141,16 +139,11 @@ function ChatPage(): React.JSX.Element {
   }, [isTyping, buffer]);
 
   // Function to handle sending a message
-  const sendMessage = async () => {
+  const sendText = async () => {
     if (inputText === '') {
       return;
     }
     const uid = auth!.uid;
-
-    const newChat: Chat = {
-      num_raw: 1,
-      is_processing: false,
-    };
 
     const newMessage: Message = {
       content: inputText,
@@ -158,34 +151,28 @@ function ChatPage(): React.JSX.Element {
       timestamp: Timestamp.now(),
       type: 'text',
     };
-
-    try {
-      await runTransaction(FIRESTORE, async transaction => {
-        // Get the chat document reference
-        const chatRef = doc(collection(FIRESTORE, 'chats'), uid);
-        // Get the chat document
-        const chatDoc = await transaction.get(chatRef);
-        if (!chatDoc.exists()) {
-          transaction.set(chatRef, newChat);
-        } else {
-          transaction.update(chatRef, {num_raw: increment(1)});
-        }
-        // Add the new message to the messages collection
-        const newMessageRef = doc(collection(chatRef, 'messages'));
-        transaction.set(newMessageRef, newMessage);
-      });
+    if (await sendMessage(uid, newMessage)) {
       setInputText('');
-    } catch (e) {
-      console.log(e);
-      return false;
+    } else {
+      console.log('Failed to send message');
     }
 
-    console.log('Message sent');
     // prolong the typing status assuming the user may
     // continue typing in 5secs after sending
     // !WARNING: order matters. startTyping must be called before setBuffer
     startTyping(2500);
     setBuffer(previous => previous + 1);
+  };
+
+  const sendAudio = async () => {
+    const newMessage: Message = {
+      content: {uri: audio!.uri, duration: audio!.duration},
+      sender_id: auth!.uid,
+      timestamp: Timestamp.now(),
+      type: 'audio',
+    };
+    const uid = auth!.uid;
+    sendMessage(uid, newMessage);
   };
 
   /**
@@ -206,7 +193,7 @@ function ChatPage(): React.JSX.Element {
   };
 
   // State to hold path of the audio recording
-  const [audio, setAudio] = useState<string | null>();
+  const [audio, setAudio] = useState<AudioInfo>();
   // State to indicate if the audio recording should be cancelled
   const [cancel, setCancel] = useState<boolean>(false);
 
@@ -218,8 +205,8 @@ function ChatPage(): React.JSX.Element {
 
   // SideEffect that sends the audio to the server when the audio state changes
   useEffect(() => {
-    if (audio && !cancel) {
-      console.log('sending audio', audio);
+    if (audio && audio.uri && !cancel) {
+      sendAudio();
     }
     setCancel(false);
   }, [audio]);
@@ -231,7 +218,6 @@ function ChatPage(): React.JSX.Element {
         return;
       }
       if (event.translationX < -150) {
-        console.log('cancel');
         runOnJS(setCancel)(true);
         runOnJS(setInputType)('text');
         return;
@@ -298,7 +284,7 @@ function ChatPage(): React.JSX.Element {
                   }}
                 />
                 <SendButton
-                  onPress={sendMessage}
+                  onPress={sendText}
                   disabled={inputText.length == 0}
                 />
               </View>

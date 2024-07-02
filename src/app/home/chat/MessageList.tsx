@@ -50,10 +50,7 @@ const MessageList: React.FC<MessageListProps> = ({messages, showHeader}) => {
           // display the timestamp if the message is the first in the list or if the previous message was sent more than 2 minutes ago
           return (
             <>
-              <MessageBubble
-                message={item.content || item.text} //! fix me
-                isUser={item.sender_id == auth!.uid}
-              />
+              <MessageBubble message={item} />
               {(index == messages.length - 1 ||
                 thisTimestamp.diff(
                   dayjs.unix(messages[index + 1].timestamp.seconds),
