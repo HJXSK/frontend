@@ -1,4 +1,4 @@
-import {StyleSheet, Text, View} from 'react-native';
+import {ImageSourcePropType, StyleSheet, Text, View} from 'react-native';
 import Avatar from '@/components/settings/avatar';
 import {selectSettings} from '@/redux/features/settings/settingsSlice';
 import {useSelector} from 'react-redux';
@@ -14,15 +14,18 @@ const ChatTitle: React.FC = (): JSX.Element => {
     STORAGE,
     `${auth.uid}/images/${settings.gs_settings_bot_avatar}`,
   );
-  const [avatar, setAvatar] = useState('');
+  const [avatar, setAvatar] = useState<ImageSourcePropType | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
     if (!settings.gs_settings_bot_avatar) {
+      setAvatar(require('@/assets/default_bot_avatar.png'));
       return;
     }
     getDownloadURL(avatarRef)
-      .then(url => {
-        setAvatar(url);
+      .then(uri => {
+        setAvatar({uri: uri});
       })
       .catch(err => {
         console.error('ERROR', err);
