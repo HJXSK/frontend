@@ -1,6 +1,11 @@
-import {Chat, Message} from '@/app/home/chat';
+import {Message} from '@/app/home/chat';
 import {FIRESTORE} from '@/firebase/firebaseConfig';
 import {collection, doc, increment, runTransaction} from 'firebase/firestore';
+
+export type Chat = {
+  num_raw: number;
+  is_processing: boolean;
+};
 
 async function sendMessage(uid: string, newMessage: Message) {
   try {

@@ -1,12 +1,12 @@
 import React, {useState, useRef, useEffect} from 'react';
 import {
   View,
-  Text,
   TextInput,
-  FlatList,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  TouchableOpacity,
+  Keyboard,
 } from 'react-native';
 import {FIRESTORE, FUNCTIONS} from '@/firebase/firebaseConfig';
 import {httpsCallable} from 'firebase/functions';
@@ -31,6 +31,8 @@ import {Gesture, GestureDetector} from 'react-native-gesture-handler';
 import {FontAwesome5} from '@expo/vector-icons';
 import {AntDesign} from '@expo/vector-icons';
 import {sendMessage} from '@/util/firebase';
+import SlideUpPanel from '@/components/container/SlideUpPanel';
+import Media from './Media';
 
 export type MessageType = 'text' | 'audio' | 'image';
 
@@ -40,11 +42,6 @@ export type Message = {
   sender_id: string;
   timestamp: Timestamp;
   type: MessageType;
-};
-
-export type Chat = {
-  num_raw: number;
-  is_processing: boolean;
 };
 
 export type AudioInfo = {
@@ -252,21 +249,40 @@ function ChatPage(): React.JSX.Element {
     transform: [{translateX: offset.value}],
   }));
 
+  const [openMultiMedia, setOpenMultiMedia] = useState(false);
+
+  const handleMultiMediaOpen = () => {
+    setOpenMultiMedia(true);
+    Keyboard.dismiss();
+  };
+
+  const handleMultiMediaClose = () => {
+    setOpenMultiMedia(false);
+  };
+
   return (
     <SafeAreaView style={{flex: 1, backgroundColor: theme.colors.foreground}}>
       <KeyboardAvoidingView
         style={{flex: 1}}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <MessageList messages={messages} showHeader={isProcessing} />
-
+        <MessageList
+          messages={messages}
+          showHeader={isProcessing}
+          // close the multiMedia panel when the user scrolls
+          onTouchStart={handleMultiMediaClose}
+        />
         <View style={styles.inputContainer}>
           {inputType === 'audio' ? (
             <AudioBar animatedStyles={animatedStyles} audioSetter={setAudio} />
           ) : (
             <>
-              <View style={styles.multiButton}>
+              <TouchableOpacity
+                style={styles.multiButton}
+                onPress={() => {
+                  handleMultiMediaOpen();
+                }}>
                 <AntDesign name="plus" size={20} color="rgba(0,0,0, 0.8)" />
-              </View>
+              </TouchableOpacity>
               <View style={styles.textWrapper}>
                 {/* TextInput */}
                 <TextInput
@@ -301,9 +317,13 @@ function ChatPage(): React.JSX.Element {
               />
             </Animated.View>
           </GestureDetector>
-          {/* <AudioButton /> */}
         </View>
       </KeyboardAvoidingView>
+      <SlideUpPanel open={openMultiMedia}>
+        <View style={{flexDirection: 'row', padding: 20}}>
+          <Media />
+        </View>
+      </SlideUpPanel>
     </SafeAreaView>
   );
 }

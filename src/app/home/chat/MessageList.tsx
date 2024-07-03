@@ -1,5 +1,5 @@
 import {useTheme} from '@/themes';
-import {FlatList, Text, View} from 'react-native';
+import {FlatList, FlatListProps, Text, View} from 'react-native';
 import MessageBubble from './MessageBubble';
 import {getAuth} from 'firebase/auth';
 import {useRef} from 'react';
@@ -10,9 +10,13 @@ import {Message} from './';
 type MessageListProps = {
   messages: Message[];
   showHeader: boolean;
-};
+} & Partial<FlatListProps<Message>>;
 
-const MessageList: React.FC<MessageListProps> = ({messages, showHeader}) => {
+const MessageList: React.FC<MessageListProps> = ({
+  messages,
+  showHeader,
+  ...props
+}) => {
   const auth = getAuth().currentUser;
   const flatListRef = useRef<FlatList>(null);
 
@@ -27,6 +31,7 @@ const MessageList: React.FC<MessageListProps> = ({messages, showHeader}) => {
           flex: 1,
           backgroundColor: theme.colors.background,
         }}
+        {...props}
         keyboardDismissMode="on-drag"
         // to correct the scroll position
         scrollIndicatorInsets={{
