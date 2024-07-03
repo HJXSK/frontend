@@ -264,12 +264,7 @@ function ChatPage(): React.JSX.Element {
             <AudioBar animatedStyles={animatedStyles} audioSetter={setAudio} />
           ) : (
             <>
-              <View
-                style={{
-                  flex: 1,
-                  justifyContent: 'flex-end',
-                  flexDirection: 'row',
-                }}>
+              <View style={styles.multiButton}>
                 <AntDesign name="plus" size={20} color="rgba(0,0,0, 0.8)" />
               </View>
               <View style={styles.textWrapper}>
@@ -293,10 +288,12 @@ function ChatPage(): React.JSX.Element {
           {/* Audio input */}
           <GestureDetector gesture={compose}>
             <Animated.View
-              style={{
-                flex: 1,
-                opacity: isPressing,
-              }}>
+              style={[
+                {
+                  opacity: isPressing,
+                },
+                styles.audioButton,
+              ]}>
               <FontAwesome5
                 name="microphone"
                 size={20}
@@ -318,12 +315,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 10,
     alignItems: 'center',
-    gap: 10,
-    height: 50,
+    minHeight: 50,
     justifyContent: 'center',
   },
+  multiButton: {
+    position: 'absolute',
+    left: 20,
+    bottom: 15, // (minHeight - 20) / 2
+    justifyContent: 'flex-end',
+    flexDirection: 'row',
+  },
+  audioButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 15, // (minHeight - 20) / 2
+  },
   textWrapper: {
-    flex: 10,
+    width: '80%',
     flexDirection: 'row',
     borderRadius: 15,
     borderWidth: 0.2,
