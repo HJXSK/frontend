@@ -1,17 +1,32 @@
-import {Message} from '@/app/home/chat';
+import {Message, MessageType} from '@/app/home/chat';
 import {FIRESTORE} from '@/firebase/firebaseConfig';
-import {collection, doc, increment, runTransaction} from 'firebase/firestore';
+import {getAuth} from 'firebase/auth';
+import {
+  Timestamp,
+  collection,
+  doc,
+  increment,
+  runTransaction,
+} from 'firebase/firestore';
 
 export type Chat = {
   num_raw: number;
   is_processing: boolean;
 };
 
-async function sendMessage(uid: string, newMessage: Message) {
+async function sendMessage(type: MessageType, content: any) {
+  const auth = getAuth().currentUser;
+  const newMessage: Message = {
+    content: content,
+    sender_id: auth!.uid,
+    timestamp: Timestamp.now(),
+    type: type,
+  };
+
   try {
     await runTransaction(FIRESTORE, async transaction => {
       // Get the chat document reference
-      const chatRef = doc(collection(FIRESTORE, 'chats'), uid);
+      const chatRef = doc(collection(FIRESTORE, 'chats'), auth!.uid);
       // Get the chat document
       const chatDoc = await transaction.get(chatRef);
       if (!chatDoc.exists()) {

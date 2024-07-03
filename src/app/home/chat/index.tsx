@@ -19,20 +19,12 @@ import {Timestamp} from 'firebase/firestore';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useTheme} from '@/themes';
 import SendButton from './SendButton';
-import AudioBar from './AudioBar';
 import MessageList from './MessageList';
-import Animated, {
-  runOnJS,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
-import {Gesture, GestureDetector} from 'react-native-gesture-handler';
-import {FontAwesome5} from '@expo/vector-icons';
 import {AntDesign} from '@expo/vector-icons';
 import {sendMessage} from '@/util/firebase';
 import SlideUpPanel from '@/components/container/SlideUpPanel';
 import Media from './Media';
+import AudioBar from './AudioBar';
 
 export type MessageType = 'text' | 'audio' | 'image';
 
@@ -140,15 +132,7 @@ function ChatPage(): React.JSX.Element {
     if (inputText === '') {
       return;
     }
-    const uid = auth!.uid;
-
-    const newMessage: Message = {
-      content: inputText,
-      sender_id: uid,
-      timestamp: Timestamp.now(),
-      type: 'text',
-    };
-    if (await sendMessage(uid, newMessage)) {
+    if (await sendMessage('text', inputText)) {
       setInputText('');
     } else {
       console.log('Failed to send message');
@@ -159,17 +143,6 @@ function ChatPage(): React.JSX.Element {
     // !WARNING: order matters. startTyping must be called before setBuffer
     startTyping(2500);
     setBuffer(previous => previous + 1);
-  };
-
-  const sendAudio = async () => {
-    const newMessage: Message = {
-      content: {uri: audio!.uri, duration: audio!.duration},
-      sender_id: auth!.uid,
-      timestamp: Timestamp.now(),
-      type: 'audio',
-    };
-    const uid = auth!.uid;
-    sendMessage(uid, newMessage);
   };
 
   /**
@@ -188,66 +161,6 @@ function ChatPage(): React.JSX.Element {
       setIsTyping(false);
     }, delay);
   };
-
-  // State to hold path of the audio recording
-  const [audio, setAudio] = useState<AudioInfo>();
-  // State to indicate if the audio recording should be cancelled
-  const [cancel, setCancel] = useState<boolean>(false);
-
-  // Shared value for the offset of the pan gesture
-  const offset = useSharedValue<number>(0);
-
-  // Shared value for the pressing state of the long press gesture
-  const isPressing = useSharedValue(0);
-
-  // SideEffect that sends the audio to the server when the audio state changes
-  useEffect(() => {
-    if (audio && audio.uri && !cancel) {
-      sendAudio();
-    }
-    setCancel(false);
-  }, [audio]);
-
-  // Gesture detections including pan and long press for audio input
-  const pan = Gesture.Pan()
-    .onChange(event => {
-      if (event.translationX > 0) {
-        return;
-      }
-      if (event.translationX < -150) {
-        runOnJS(setCancel)(true);
-        runOnJS(setInputType)('text');
-        return;
-      }
-      offset.value = event.translationX;
-    })
-    .onFinalize(event => {
-      offset.value = withSpring(0);
-    });
-
-  const longPress = Gesture.LongPress()
-    .minDuration(200)
-    .shouldCancelWhenOutside(false)
-    .maxDistance(3000)
-    .onBegin(() => {
-      isPressing.value = 0.5;
-    })
-    .onStart(() => {
-      runOnJS(setInputType)('audio');
-    })
-    .onEnd(() => {
-      runOnJS(setInputType)('text');
-    })
-    .onFinalize(() => {
-      isPressing.value = 1;
-    });
-
-  // The composed gesture that is used for the audio input
-  const compose = Gesture.Simultaneous(longPress, pan);
-
-  const animatedStyles = useAnimatedStyle(() => ({
-    transform: [{translateX: offset.value}],
-  }));
 
   const [openMultiMedia, setOpenMultiMedia] = useState(false);
 
@@ -272,9 +185,7 @@ function ChatPage(): React.JSX.Element {
           onTouchStart={handleMultiMediaClose}
         />
         <View style={styles.inputContainer}>
-          {inputType === 'audio' ? (
-            <AudioBar animatedStyles={animatedStyles} audioSetter={setAudio} />
-          ) : (
+          {inputType === 'text' && (
             <>
               <TouchableOpacity
                 style={styles.multiButton}
@@ -302,21 +213,7 @@ function ChatPage(): React.JSX.Element {
             </>
           )}
           {/* Audio input */}
-          <GestureDetector gesture={compose}>
-            <Animated.View
-              style={[
-                {
-                  opacity: isPressing,
-                },
-                styles.audioButton,
-              ]}>
-              <FontAwesome5
-                name="microphone"
-                size={20}
-                color="rgba(0,0,0, 0.4)"
-              />
-            </Animated.View>
-          </GestureDetector>
+          <AudioBar inputTypeSetter={setInputType} />
         </View>
       </KeyboardAvoidingView>
       <SlideUpPanel open={openMultiMedia}>
