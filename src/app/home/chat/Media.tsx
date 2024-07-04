@@ -1,54 +1,66 @@
-import {StyleSheet, Text, View} from 'react-native';
 import {Fontisto} from '@expo/vector-icons';
-import {useState} from 'react';
 import * as ImagePicker from 'expo-image-picker';
-import {TouchableOpacity} from 'react-native-gesture-handler';
+import PanelItem from './PanelItem';
+import {STORAGE} from '@/firebase/firebaseConfig';
+import {ref, uploadBytesResumable} from 'firebase/storage';
+import {getAuth} from 'firebase/auth';
+import {sendMessage} from '@/util/firebase';
 
 export default function Media(): JSX.Element {
-  const [image, setImage] = useState(null);
+  const auth = getAuth().currentUser;
 
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
     let result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
-      // allowsEditing: true,
-      // aspect: [4, 3],
       allowsMultipleSelection: true,
-      quality: 1,
+      // https://stackoverflow.com/questions/70528896/react-native-expo-image-picker-upload-image-to-firebase-storage-v9-crash
+      quality: 0.5, // as well as using uploadBytesResumable
     });
 
-    console.log(result);
-
     if (!result.canceled) {
-      setImage(result.assets[0].uri);
+      result.assets.forEach(async asset => {
+        const path = await uploadImageAsync(asset.uri);
+        sendMessage('image', path);
+      });
     }
   };
 
+  async function uploadImageAsync(uri: string) {
+    console.log(uri);
+    const blob: any = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function () {
+        console.log('onload', xhr.response);
+        resolve(xhr.response);
+      };
+      xhr.onerror = function (e) {
+        console.log(e);
+        reject(new TypeError('Network request failed'));
+      };
+      xhr.responseType = 'blob';
+      xhr.open('GET', uri, true);
+      xhr.send(null);
+    });
+    // const fileName = uuidv7();
+    const fileRef = ref(STORAGE, `${auth?.uid}/images/${blob._data.name}`);
+    const result = await uploadBytesResumable(fileRef, blob);
+    // We're done with the blob, close and release it
+    blob.close();
+    return result.metadata.fullPath;
+  }
+
   return (
-    <View style={styles.rootContainer}>
-      <TouchableOpacity style={styles.iconContainer} onPress={pickImage}>
-        <Fontisto name="photograph" size={36} color="rgb(83,166,253)" />
-      </TouchableOpacity>
-      <Text>Media</Text>
-    </View>
+    <PanelItem
+      title="Media"
+      icon={
+        <Fontisto
+          name="photograph"
+          size={36}
+          color="rgb(83,166,253)"
+          onPress={pickImage}
+        />
+      }
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  rootContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderColor: 'black',
-    borderWidth: 1,
-  },
-  iconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 10,
-    backgroundColor: 'rgba(59,59,59,0.1)',
-  },
-});

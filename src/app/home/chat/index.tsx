@@ -25,6 +25,7 @@ import {sendMessage} from '@/util/firebase';
 import SlideUpPanel from '@/components/container/SlideUpPanel';
 import Media from './Media';
 import AudioBar from './AudioBar';
+import Camera from './Camera';
 
 export type MessageType = 'text' | 'audio' | 'image';
 
@@ -219,6 +220,7 @@ function ChatPage(): React.JSX.Element {
       <SlideUpPanel open={openMultiMedia}>
         <View style={{flexDirection: 'row', padding: 20}}>
           <Media />
+          <Camera />
         </View>
       </SlideUpPanel>
     </SafeAreaView>
