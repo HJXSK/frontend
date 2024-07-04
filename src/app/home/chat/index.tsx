@@ -218,10 +218,8 @@ function ChatPage(): React.JSX.Element {
         </View>
       </KeyboardAvoidingView>
       <SlideUpPanel open={openMultiMedia}>
-        <View style={{flexDirection: 'row', padding: 20}}>
-          <Media />
-          <Camera />
-        </View>
+        <Media />
+        <Camera />
       </SlideUpPanel>
     </SafeAreaView>
   );

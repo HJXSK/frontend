@@ -40,6 +40,7 @@ export default function SlideUpPanel({
       easing: Easing.out(Easing.quad),
       reduceMotion: ReduceMotion.System,
     }),
+    borderTopWidth: height.value == 0 ? 0 : 0.2,
   }));
 
   return (
@@ -48,8 +49,8 @@ export default function SlideUpPanel({
         animatedStyles,
         {
           overflow: 'hidden',
-          borderColor: 'black',
-          borderWidth: 1,
+          borderColor: 'gray',
+          flexDirection: 'row',
         },
       ]}>
       {children}

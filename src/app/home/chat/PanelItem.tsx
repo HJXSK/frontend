@@ -18,18 +18,17 @@ export default function PanelItem(props: PanelItemProps): JSX.Element {
 
 const styles = StyleSheet.create({
   rootContainer: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    borderColor: 'black',
-    borderWidth: 1,
   },
   iconContainer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 80,
+    height: 80,
+    borderRadius: 40,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
     padding: 10,
     backgroundColor: 'rgba(59,59,59,0.1)',
   },

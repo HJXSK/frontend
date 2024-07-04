@@ -1,27 +1,26 @@
-import {useState} from 'react';
 import PanelItem from './PanelItem';
 import * as ImagePicker from 'expo-image-picker';
-import {Fontisto} from '@expo/vector-icons';
+import {FontAwesome} from '@expo/vector-icons';
+import {sendMessage, uploadFileAsync} from '@/util/firebase';
 
 export default function Camera(): JSX.Element {
   const [status, requestPermission] = ImagePicker.useCameraPermissions();
 
-  const pickImage = async () => {
+  const takeImage = async () => {
     if (!status!.granted) {
       await requestPermission();
     }
     try {
       let result = await ImagePicker.launchCameraAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.All,
-        // allowsEditing: true,
-        // aspect: [4, 3],
         allowsMultipleSelection: true,
-        quality: 1,
+        quality: 0.5,
       });
 
       if (!result.canceled) {
-        result.assets.forEach(asset => {
-          console.log(asset.uri);
+        result.assets.forEach(async asset => {
+          const fullPath = await uploadFileAsync(asset.uri, 'image');
+          sendMessage(fullPath, 'image');
         });
       }
     } catch (error) {
@@ -33,13 +32,9 @@ export default function Camera(): JSX.Element {
     <PanelItem
       title="Camera"
       icon={
-        <Fontisto
-          name="photograph"
-          size={36}
-          color="rgb(83,166,253)"
-          onPress={pickImage}
-        />
+        <FontAwesome name="camera-retro" size={36} color="rgb(83,166,253)" />
       }
+      onPress={takeImage}
     />
   );
 }

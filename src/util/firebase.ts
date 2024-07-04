@@ -1,5 +1,5 @@
 import {Message, MessageType} from '@/app/home/chat';
-import {FIRESTORE} from '@/firebase/firebaseConfig';
+import {FIRESTORE, STORAGE} from '@/firebase/firebaseConfig';
 import {getAuth} from 'firebase/auth';
 import {
   Timestamp,
@@ -8,13 +8,14 @@ import {
   increment,
   runTransaction,
 } from 'firebase/firestore';
+import {ref, uploadBytesResumable} from 'firebase/storage';
 
 export type Chat = {
   num_raw: number;
   is_processing: boolean;
 };
 
-async function sendMessage(type: MessageType, content: any) {
+async function sendMessage(content: any, type: MessageType) {
   const auth = getAuth().currentUser;
   const newMessage: Message = {
     content: content,
@@ -49,4 +50,38 @@ async function sendMessage(type: MessageType, content: any) {
   return true;
 }
 
-export {sendMessage};
+/**
+ * Uploads a file asynchronously to Firebase storage.
+ * @param type - The type of the file (e.g., image, video, etc.).
+ * @param uri - The URI of the file to be uploaded.
+ * @returns The full path of the uploaded file in Firebase storage.
+ */
+async function uploadFileAsync(uri: string, type: string) {
+  const auth = getAuth().currentUser;
+
+  // Fetch the file as a blob
+  const blob: any = await new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.onload = function () {
+      resolve(xhr.response);
+    };
+    xhr.onerror = function (e) {
+      console.log(e);
+      reject(new TypeError('Network request failed'));
+    };
+    xhr.responseType = 'blob';
+    xhr.open('GET', uri, true);
+    xhr.send(null);
+  });
+
+  // Create a reference to the file in Firebase storage
+  const fileRef = ref(STORAGE, `${auth?.uid}/${type}s/${blob._data.name}`);
+  // Upload the file to Firebase storage
+  const result = await uploadBytesResumable(fileRef, blob);
+  // We're done with the blob, close and release it
+  blob.close();
+
+  return result.metadata.fullPath;
+}
+
+export {sendMessage, uploadFileAsync};
