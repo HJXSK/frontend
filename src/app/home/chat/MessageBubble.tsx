@@ -1,8 +1,21 @@
-import {StyleSheet, Text, View} from 'react-native';
+import {
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import type {AudioInfo, Message} from '.';
 import {getAuth} from 'firebase/auth';
 import dayjs from 'dayjs';
 import {MaterialIcons} from '@expo/vector-icons';
+import {Image} from 'react-native';
+import {useEffect, useState} from 'react';
+import {downloadFileAsync} from '@/util/firebase';
+import {MaterialCommunityIcons} from '@expo/vector-icons';
+import {TouchableOpacity} from 'react-native-gesture-handler';
+import {SafeAreaView} from 'react-native';
 
 type TextContentProps = {
   text: string;
@@ -14,8 +27,15 @@ type AudioContentProps = {
   isUser: boolean;
 };
 
+type ImageContentProps = {
+  image: string;
+  isUser: boolean;
+};
+
 const TextContent: React.FC<TextContentProps> = ({text, isUser}) => {
-  return <Text style={{color: isUser ? 'black' : 'white'}}>{text}</Text>;
+  return (
+    <Text style={{color: isUser ? 'black' : 'white', margin: 10}}>{text}</Text>
+  );
 };
 
 const AudioContent: React.FC<AudioContentProps> = ({audio, isUser}) => {
@@ -34,19 +54,108 @@ const AudioContent: React.FC<AudioContentProps> = ({audio, isUser}) => {
   );
 };
 
+const ImageContent: React.FC<ImageContentProps> = ({image, isUser}) => {
+  const [uri, setUri] = useState('');
+  const [width, setWidth] = useState<number | undefined>(undefined);
+  const [height, setHeight] = useState<number | undefined>(undefined);
+  const [ratio, setRatio] = useState(0);
+  const [status, setStatus] = useState('loading');
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    // Download the image file asynchronously
+    downloadFileAsync(image).then(uri => {
+      // Get the size of the downloaded image
+      Image.getSize(
+        uri,
+        (width, height) => {
+          // Set the URI, status, and aspect ratio of the image
+          setUri(uri);
+          setStatus('loaded');
+          setRatio(width / height);
+          // Adjust the width or height based on the aspect ratio
+          if (width > height) {
+            setWidth(Math.min(width, 250));
+          } else {
+            setHeight(Math.min(height, 250));
+          }
+        },
+        error => {
+          // Set the status to error if there is an error loading the image
+          setStatus('error');
+        },
+      );
+    });
+  }, [image]);
+
+  const display = () => {
+    switch (status) {
+      case 'loading':
+        return <ActivityIndicator size="small" color={'black'} />;
+      case 'error':
+        return (
+          <MaterialCommunityIcons
+            name="image-broken"
+            style={{margin: 5}}
+            size={24}
+            color="black"
+          />
+        );
+      default:
+        return (
+          <>
+            <TouchableOpacity
+              onPress={() => {
+                setOpen(true);
+              }}>
+              <Image
+                src={uri}
+                style={{
+                  flex: 1,
+                  width: width,
+                  height: height,
+                  aspectRatio: ratio,
+                }}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+            <Modal animationType="fade" visible={open}>
+              <SafeAreaView style={{flex: 1}}>
+                <Pressable
+                  style={{flex: 1}}
+                  onPress={() => {
+                    setOpen(false);
+                  }}>
+                  <Image src={uri} style={{flex: 1}} resizeMode="contain" />
+                </Pressable>
+              </SafeAreaView>
+            </Modal>
+          </>
+        );
+    }
+  };
+
+  return (
+    <View
+      style={{borderRadius: 10, margin: status == 'loading' ? 10 : 0, flex: 1}}>
+      {display()}
+    </View>
+  );
+};
+
 // Custom message bubble component
 const MessageBubble = ({message}: {message: Message}) => {
   const auth = getAuth().currentUser!;
   const isUser = message.sender_id === auth.uid;
 
+  // Display the content based on the message type
   const displayContent = () => {
     if (message.type === 'text') {
-      return (
-        //! fix me
-        <TextContent text={message.content || message.text} isUser={isUser} />
-      );
+      return <TextContent text={message.content} isUser={isUser} />;
     } else if (message.type === 'audio') {
       return <AudioContent audio={message.content} isUser={isUser} />;
+    } else if (message.type === 'image') {
+      return <ImageContent image={message.content} isUser={isUser} />;
     }
   };
 
@@ -62,10 +171,8 @@ const MessageBubble = ({message}: {message: Message}) => {
       <View
         style={{
           borderRadius: 20, // Set a higher value for a rounded container
-          paddingHorizontal: 10,
-          paddingVertical: 5,
+          overflow: 'hidden',
           backgroundColor: isUser ? '#B2DFFC' : '#007AFF',
-          borderColor: isUser ? '#B2DFFC' : '#007AFF',
         }}>
         {displayContent()}
       </View>
@@ -78,6 +185,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
+    margin: 5,
   },
 });
 

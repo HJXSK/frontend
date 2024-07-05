@@ -16,7 +16,7 @@ import {useSelector} from 'react-redux';
 import {RootState} from '@/redux/store';
 import {useHeaderHeight} from '@react-navigation/elements';
 import {Timestamp} from 'firebase/firestore';
-import {SafeAreaView} from 'react-native-safe-area-context';
+import {SafeAreaView} from 'react-native';
 import {useTheme} from '@/themes';
 import SendButton from './SendButton';
 import MessageList from './MessageList';
@@ -133,7 +133,7 @@ function ChatPage(): React.JSX.Element {
     if (inputText === '') {
       return;
     }
-    if (await sendMessage('text', inputText)) {
+    if (await sendMessage(inputText, 'text')) {
       setInputText('');
     } else {
       console.log('Failed to send message');
