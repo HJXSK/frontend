@@ -8,7 +8,7 @@ import {
   increment,
   runTransaction,
 } from 'firebase/firestore';
-import {ref, uploadBytesResumable} from 'firebase/storage';
+import {getDownloadURL, ref, uploadBytesResumable} from 'firebase/storage';
 
 export type Chat = {
   num_raw: number;
@@ -84,4 +84,10 @@ async function uploadFileAsync(uri: string, type: string) {
   return result.metadata.fullPath;
 }
 
-export {sendMessage, uploadFileAsync};
+async function downloadFileAsync(uri: string) {
+  const fileRef = ref(STORAGE, uri);
+  const url = await getDownloadURL(fileRef);
+  return url;
+}
+
+export {sendMessage, uploadFileAsync, downloadFileAsync};
