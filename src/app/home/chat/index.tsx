@@ -37,11 +37,6 @@ export type Message = {
   type: MessageType;
 };
 
-export type AudioInfo = {
-  uri: string;
-  duration: number;
-} | null;
-
 function ChatPage(): React.JSX.Element {
   // Get the auth context
   const auth = getAuth().currentUser;

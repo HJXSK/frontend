@@ -8,7 +8,13 @@ import {
   increment,
   runTransaction,
 } from 'firebase/firestore';
-import {getDownloadURL, ref, uploadBytesResumable} from 'firebase/storage';
+import {
+  getDownloadURL,
+  getMetadata,
+  ref,
+  updateMetadata,
+  uploadBytesResumable,
+} from 'firebase/storage';
 
 export type Chat = {
   num_raw: number;
@@ -56,7 +62,7 @@ async function sendMessage(content: any, type: MessageType) {
  * @param uri - The URI of the file to be uploaded.
  * @returns The full path of the uploaded file in Firebase storage.
  */
-async function uploadFileAsync(uri: string, type: string) {
+async function uploadFileAsync(uri: string, type: string, metadata?: any) {
   const auth = getAuth().currentUser;
 
   // Fetch the file as a blob
@@ -80,14 +86,24 @@ async function uploadFileAsync(uri: string, type: string) {
   const result = await uploadBytesResumable(fileRef, blob);
   // We're done with the blob, close and release it
   blob.close();
+  if (metadata) {
+    console.log(metadata);
+    await updateMetadata(fileRef, {customMetadata: metadata}).catch(e => {
+      console.log(e);
+    });
+  }
 
   return result.metadata.fullPath;
 }
 
-async function downloadFileAsync(uri: string) {
+async function downloadFileAsync(uri: string, metadata?: boolean) {
   const fileRef = ref(STORAGE, uri);
   const url = await getDownloadURL(fileRef);
-  return url;
+  if (metadata) {
+    const fileMetadata = await getMetadata(fileRef);
+    return {url, metadata: fileMetadata};
+  }
+  return {url};
 }
 
 export {sendMessage, uploadFileAsync, downloadFileAsync};

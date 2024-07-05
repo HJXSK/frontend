@@ -15,7 +15,7 @@ import dayjs from 'dayjs';
 import {Audio} from 'expo-av';
 import {FontAwesome5} from '@expo/vector-icons';
 import {MessageType} from '.';
-import {sendMessage} from '@/util/firebase';
+import {sendMessage, uploadFileAsync} from '@/util/firebase';
 
 type AudioBarProps = {
   inputTypeSetter: Dispatch<SetStateAction<MessageType>>;
@@ -89,7 +89,11 @@ export default function AudioBar({inputTypeSetter}: AudioBarProps) {
     const uri = recordingRef.current!.getURI();
     recordingRef.current = undefined;
     if (send) {
-      sendMessage('audio', {uri: uri!, duration: durationMillis});
+      uploadFileAsync(uri!, 'audio', {duration: durationMillis}).then(
+        fullPath => {
+          sendMessage(fullPath, 'audio');
+        },
+      );
     }
     // Reset the input type
     inputTypeSetter('text');

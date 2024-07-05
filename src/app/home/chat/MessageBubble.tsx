@@ -6,16 +6,17 @@ import {
   Text,
   View,
 } from 'react-native';
-import type {AudioInfo, Message} from '.';
+import type {Message} from '.';
 import {getAuth} from 'firebase/auth';
 import dayjs from 'dayjs';
 import {MaterialIcons} from '@expo/vector-icons';
 import {Image} from 'react-native';
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 import {downloadFileAsync} from '@/util/firebase';
 import {MaterialCommunityIcons} from '@expo/vector-icons';
 import {TouchableOpacity} from 'react-native-gesture-handler';
 import {SafeAreaView} from 'react-native';
+import {Audio, AVPlaybackStatus, AVPlaybackStatusSuccess} from 'expo-av';
 
 type TextContentProps = {
   text: string;
@@ -23,7 +24,7 @@ type TextContentProps = {
 };
 
 type AudioContentProps = {
-  audio: AudioInfo;
+  audio: string;
   isUser: boolean;
 };
 
@@ -39,23 +40,81 @@ const TextContent: React.FC<TextContentProps> = ({text, isUser}) => {
 };
 
 const AudioContent: React.FC<AudioContentProps> = ({audio, isUser}) => {
+  // State to store the duration of the audio, only be set when the audio is loaded
+  const [duration, setDuration] = useState<number | undefined>();
+  // State to store the audio sound object, only be set when the audio is loaded
+  const [sound, setSound] = useState<Audio.Sound | undefined>();
+  // Reference to the status of the audio playback
+  const statusRef = useRef<AVPlaybackStatusSuccess | null>();
+
+  // Function to update the status of the audio playback
+  const updateStatus = (status: AVPlaybackStatus) => {
+    if (!status.isLoaded) {
+      // Update your UI for the unloaded state
+      if (status.error) {
+        console.log(
+          `Encountered a fatal error during playback: ${status.error}`,
+        );
+      }
+    } else {
+      statusRef.current = status as AVPlaybackStatusSuccess;
+    }
+  };
+
+  useEffect(() => {
+    // Download the audio file asynchronously
+    downloadFileAsync(audio)
+      .then(async ({url}) => {
+        // Create a sound object with the downloaded audio file
+        const {sound, status} = await Audio.Sound.createAsync(
+          {uri: url},
+          undefined,
+          updateStatus,
+        );
+        setSound(sound);
+        setDuration((status as AVPlaybackStatusSuccess).durationMillis);
+      })
+      .catch(e => {
+        console.error(e);
+      });
+    return () => {
+      // Unload the sound when the component is unmounted
+      if (sound) {
+        sound.unloadAsync();
+      }
+    };
+  }, []);
+
+  const playSound = async () => {
+    if (!sound) {
+      return;
+    }
+    if (statusRef.current!.isPlaying) {
+      await sound.stopAsync();
+    } else {
+      await sound.playFromPositionAsync(0);
+    }
+  };
+
   return (
-    <View style={styles.audioContentContainer}>
-      <Text
-        style={{
-          color: isUser ? 'black' : 'white',
-          minWidth: 45,
-          textAlign: 'right',
-        }}>
-        {dayjs(audio!.duration).format('m:ss')}
-      </Text>
-      <MaterialIcons name="multitrack-audio" size={20} color="black" />
-    </View>
+    <TouchableOpacity style={styles.audioContentContainer} onPress={playSound}>
+      <>
+        <Text
+          style={{
+            color: isUser ? 'black' : 'white',
+            minWidth: 45,
+            textAlign: 'right',
+          }}>
+          {dayjs(duration).format('m:ss')}
+        </Text>
+        <MaterialIcons name="multitrack-audio" size={20} color="black" />
+      </>
+    </TouchableOpacity>
   );
 };
 
 const ImageContent: React.FC<ImageContentProps> = ({image, isUser}) => {
-  const [uri, setUri] = useState('');
+  const [url, setUrl] = useState('');
   const [width, setWidth] = useState<number | undefined>(undefined);
   const [height, setHeight] = useState<number | undefined>(undefined);
   const [ratio, setRatio] = useState(0);
@@ -64,13 +123,14 @@ const ImageContent: React.FC<ImageContentProps> = ({image, isUser}) => {
 
   useEffect(() => {
     // Download the image file asynchronously
-    downloadFileAsync(image).then(uri => {
+    downloadFileAsync(image).then(data => {
+      const url = data.url;
       // Get the size of the downloaded image
       Image.getSize(
-        uri,
+        url,
         (width, height) => {
           // Set the URI, status, and aspect ratio of the image
-          setUri(uri);
+          setUrl(url);
           setStatus('loaded');
           setRatio(width / height);
           // Adjust the width or height based on the aspect ratio
@@ -109,7 +169,7 @@ const ImageContent: React.FC<ImageContentProps> = ({image, isUser}) => {
                 setOpen(true);
               }}>
               <Image
-                src={uri}
+                src={url}
                 style={{
                   flex: 1,
                   width: width,
@@ -126,7 +186,7 @@ const ImageContent: React.FC<ImageContentProps> = ({image, isUser}) => {
                   onPress={() => {
                     setOpen(false);
                   }}>
-                  <Image src={uri} style={{flex: 1}} resizeMode="contain" />
+                  <Image src={url} style={{flex: 1}} resizeMode="contain" />
                 </Pressable>
               </SafeAreaView>
             </Modal>
