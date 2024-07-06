@@ -6,6 +6,7 @@ import {useRef} from 'react';
 import TypingBubble from '@/components/container/typingBubble';
 import dayjs from 'dayjs';
 import {Message} from './';
+import TypingMarquee from '@/components/container/TypingMarquee';
 
 type MessageListProps = {
   messages: Message[];
@@ -85,7 +86,7 @@ const MessageList: React.FC<MessageListProps> = ({
         onLayout={() =>
           flatListRef.current!.scrollToOffset({offset: 0, animated: true})
         }
-        ListHeaderComponent={showHeader ? <TypingBubble /> : null}
+        ListHeaderComponent={showHeader ? <TypingMarquee /> : null}
       />
     </View>
   );
