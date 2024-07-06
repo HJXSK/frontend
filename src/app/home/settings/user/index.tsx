@@ -2,12 +2,12 @@ import {View, Button, StyleSheet, TextInput, Text} from 'react-native';
 import {SettingItem, SettingSection} from '@/components/settings/item';
 import Avatar from '@/components/settings/avatar';
 import ScrollPage from '@/components/page';
-import {getAuth} from 'firebase/auth';
-import {FIRESTORE} from '@/firebase/firebaseConfig';
-import {doc, getDoc, setDoc, updateDoc} from 'firebase/firestore';
-import {useEffect, useState, useMemo, useLayoutEffect} from 'react';
-import {useDispatch} from 'react-redux';
-import {update_profile} from '@/redux/features/user/userProfileSlice';
+import {useState, useMemo, useLayoutEffect} from 'react';
+import {useDispatch, useSelector} from 'react-redux';
+import {
+  selectUserProfile,
+  update_profile,
+} from '@/redux/features/user/userProfileSlice';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {AppStackParamList} from '@/app';
 
@@ -23,41 +23,25 @@ const UserSettingPage: React.FC<UserSettingPageProps> = ({
   navigation,
 }): JSX.Element => {
   // Get the current authenticated user
-  const auth = getAuth().currentUser!;
   const dispatch = useDispatch();
 
-  // Create a reference to the user document in Firestore
-  const userRef = doc(FIRESTORE, 'users', auth.uid);
-
   // Define state variables for the original user info and the modified user info
-  const [originalUserInfo, setOriginalUserInfo] = useState<UserType>({});
-  const [userInfo, setUserInfo] = useState<UserType>({});
+  const userProfile = useSelector(selectUserProfile);
+  const [newUserInfo, setNewUserInfo] = useState<UserType>(userProfile);
+  // const [isEdited, setIsEdited] = useState(false);
 
   // Calculate the changes made to the user info and whether any changes have been made
   const [changes, isEdited] = useMemo(() => {
-    const result = Object.keys(userInfo).reduce((acc, key) => {
-      if (userInfo[key] !== originalUserInfo[key]) {
-        acc[key] = userInfo[key];
+    const result = Object.keys(newUserInfo).reduce((acc, key) => {
+      if (newUserInfo[key] !== userProfile[key]) {
+        console.log('Key: ', key, newUserInfo[key], userProfile[key]);
+        acc[key] = newUserInfo[key];
       }
       return acc;
     }, {} as {[key: string]: any});
     const isEdited = Object.keys(result).length > 0;
     return [result, isEdited];
-  }, [userInfo, originalUserInfo]);
-
-  // Fetch the user info from Firestore when the component mounts
-  useEffect(() => {
-    const fetchUser = async () => {
-      const userSnap = await getDoc(userRef);
-      if (userSnap.exists()) {
-        setUserInfo(userSnap.data());
-        setOriginalUserInfo(userSnap.data());
-      } else {
-        setDoc(userRef, {});
-      }
-    };
-    fetchUser();
-  }, []);
+  }, [newUserInfo, userProfile]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -65,19 +49,16 @@ const UserSettingPage: React.FC<UserSettingPageProps> = ({
         <Button disabled={!isEdited} title="Done" onPress={saveUser} />
       ),
     });
-  }, [navigation]);
+  }, [changes]);
 
   /**
    * Save the user info to Firestore
    */
   const saveUser = async () => {
     try {
-      // Update the user document in Firestore with the changes
-      await updateDoc(userRef, changes);
-      // Update the original user info with the modified user info
-      setOriginalUserInfo(userInfo);
       // Dispatch an action to update the user profile in Redux
-      dispatch(update_profile(userInfo));
+
+      dispatch(update_profile(changes));
     } catch (error) {
       console.error('Error updating document: ', error);
     }
@@ -93,25 +74,26 @@ const UserSettingPage: React.FC<UserSettingPageProps> = ({
           <TextInput
             placeholder="None"
             textAlign="right"
-            onChangeText={name => {
-              setUserInfo({...userInfo, name});
+            onChangeText={gs_user_name => {
+              console.log(newUserInfo);
+              setNewUserInfo({...newUserInfo, gs_user_name});
             }}>
-            {userInfo.name}
+            {newUserInfo.gs_user_name}
           </TextInput>
         </SettingItem>
 
         <SettingItem title="Email">
-          <Text>{auth.email}</Text>
+          <Text>{userProfile.gs_user_email}</Text>
         </SettingItem>
 
         <SettingItem title="Bio" showBorder={false}>
           <TextInput
             placeholder="None"
             textAlign="right"
-            onChangeText={bio => {
-              setUserInfo({...userInfo, bio});
+            onChangeText={gs_user_bio => {
+              setNewUserInfo({...newUserInfo, gs_user_bio});
             }}>
-            {userInfo.bio}
+            {newUserInfo.gs_user_bio}
           </TextInput>
         </SettingItem>
       </SettingSection>
