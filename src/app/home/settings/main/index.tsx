@@ -1,11 +1,4 @@
-import {
-  Text,
-  View,
-  StyleSheet,
-  Switch,
-  ScrollView,
-  TouchableOpacity,
-} from 'react-native';
+import {Text, StyleSheet, Switch, TouchableOpacity} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {
   selectSettings,
@@ -19,6 +12,7 @@ import ScrollPage from '@/components/page';
 import {SettingItem, SettingSection} from '@/components/settings/item';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import {AppStackParamList} from '@/app';
+import ChatBotAvatar from '@/components/chatbot/ChatBotAvatar';
 
 const styles = StyleSheet.create({
   signOutButtonContainer: {
@@ -62,6 +56,17 @@ const MainSettingsPage: React.FC<MainSettingsProps> = ({
   return (
     <ScrollPage>
       <User navigation={navigation} />
+
+      <SettingSection>
+        <SettingItem
+          title="Chatbot"
+          showBorder={false}
+          onPress={() => navigation.navigate('setting-chatbot')}
+          category="category"
+          before={<ChatBotAvatar />}
+        />
+      </SettingSection>
+
       <SettingSection>
         <SettingItem
           title="Profanity Filter"

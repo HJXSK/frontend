@@ -1,22 +1,23 @@
-import {Image, StyleSheet} from 'react-native';
+import {Image, StyleSheet, ImageSourcePropType} from 'react-native';
 
 type AvatarProps = {
   width?: number;
   height?: number;
   src?: string | null;
+  source?: ImageSourcePropType;
 };
 
 const Avatar: React.FC<AvatarProps> = ({
   width = 60,
   height = 60,
   src = null,
+  source,
 }): JSX.Element => {
-  const source = src ? {uri: src} : require('../../assets/default_avatar.png');
-
   return (
     <Image
       alt=""
-      source={source}
+      src={src || undefined}
+      source={source || require('../../assets/default_avatar.png')}
       style={[styles.profileAvatar, {width: width, height: height}]}
     />
   );

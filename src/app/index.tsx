@@ -21,6 +21,7 @@ import SettingButton from './home/chat/SettingButton';
 import MainSettingPage from './home/settings/main';
 import UserSettingPage from './home/settings/user';
 import {GestureHandlerRootView} from 'react-native-gesture-handler';
+import ChatBotSettingPage from './home/settings/chatbot';
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
@@ -29,6 +30,7 @@ export type AppStackParamList = {
   'sign-up': undefined;
   'setting-main': undefined;
   'setting-user': undefined;
+  'setting-chatbot': undefined;
   home: undefined;
   init: undefined;
 };
@@ -61,7 +63,7 @@ function App(): React.JSX.Element {
                     component={ChatPage}
                     options={({navigation, route}) => ({
                       title: 'Chat',
-                      headerTitle: () => <ChatTitle />,
+                      headerTitle: () => <ChatTitle navigation={navigation} />,
                       headerRight: () => (
                         <SettingButton navigation={navigation} />
                       ),
@@ -78,6 +80,11 @@ function App(): React.JSX.Element {
                     name="setting-user"
                     component={UserSettingPage}
                     options={{title: 'User'}}
+                  />
+                  <Stack.Screen
+                    name="setting-chatbot"
+                    component={ChatBotSettingPage}
+                    options={{title: 'Chatbot'}}
                   />
                 </>
               ) : (
