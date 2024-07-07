@@ -7,7 +7,7 @@ type RawItemProps = {
   before?: JSX.Element;
   onPress?: () => void;
   onToggle?: () => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
   showBorder?: boolean;
   category?: ItemType;
 };

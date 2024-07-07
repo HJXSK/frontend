@@ -1,5 +1,5 @@
 import {FIRESTORE} from '@/firebase/firebaseConfig';
-import {createSlice} from '@reduxjs/toolkit';
+import {createSelector, createSlice} from '@reduxjs/toolkit';
 import {getAuth} from 'firebase/auth';
 import {doc, updateDoc} from 'firebase/firestore';
 
@@ -35,8 +35,17 @@ export const settingsSlice = createSlice({
         console.error('Error updating document: ', err);
       });
     },
-    update_bot_avatar: (state, action) => {
-      state.gs_settings_bot_avatar = action.payload;
+    update_chatbot_settings: (state, action) => {
+      let payload = {} as {[key: string]: any};
+      Object.keys(action.payload).map(attribute => {
+        state[attribute] = action.payload[attribute];
+        payload[`settings.${attribute}`] = action.payload[attribute];
+      });
+      const auth = getAuth().currentUser!;
+      const userRef = doc(FIRESTORE, 'users', auth.uid);
+      updateDoc(userRef, payload).catch(err => {
+        console.error('Error updating document: ', err);
+      });
     },
     init_settings: (state, action) => {
       Object.keys(action.payload).map(attribute => {
@@ -47,7 +56,20 @@ export const settingsSlice = createSlice({
 });
 
 // Action creators are generated for each case reducer function
-export const {toggle_ProfanityFilter, init_settings} = settingsSlice.actions;
+export const {toggle_ProfanityFilter, init_settings, update_chatbot_settings} =
+  settingsSlice.actions;
 export const selectSettings = (state: {settings: settingState}) =>
   state.settings;
+
+// use createSelector to memoize the selector
+export const selectChatbotSettings = createSelector(
+  [selectSettings],
+  settings => {
+    return {
+      gs_settings_bot_name: settings.gs_settings_bot_name,
+      gs_settings_bot_avatar: settings.gs_settings_bot_avatar,
+    };
+  },
+);
+
 export default settingsSlice.reducer;
