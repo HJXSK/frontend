@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
+  SafeAreaView,
 } from 'react-native';
 import {useForm, Controller} from 'react-hook-form';
 import {
@@ -22,6 +23,7 @@ import {FIREBASE_AUTH} from '../../../firebase/firebaseConfig';
 
 import {AppStackParamList} from '@/app';
 import {NativeStackScreenProps} from '@react-navigation/native-stack';
+import {Image} from 'react-native';
 
 type FormData = {
   email: string;
@@ -124,9 +126,23 @@ function SignInPage({navigation}: SignInPageProps): React.JSX.Element {
   // };
 
   return (
-    <View
+    <SafeAreaView
       style={[styles.container, {backgroundColor: theme.colors.background}]}>
-      <Text style={{margin: 100}}>Testing</Text>
+      <View
+        style={{
+          margin: 30,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+        <Image
+          source={require('../../../assets/logo.png')}
+          style={{width: 60, height: 60}}
+          resizeMode="contain"
+        />
+
+        <Text style={{fontSize: 50, fontWeight: '500'}}>Sandwich</Text>
+      </View>
       {/* Email */}
       <Controller
         control={control}
@@ -244,7 +260,7 @@ function SignInPage({navigation}: SignInPageProps): React.JSX.Element {
         onPress={googleSignIn}
         disabled={loading}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 
